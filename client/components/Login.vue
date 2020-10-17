@@ -1,0 +1,54 @@
+<template>
+  <div class="no-overflow centered">
+    <h2>Connexion</h2>
+    <form @submit.prevent="login">
+      <div class="form-group">
+        <input class="centered-text" type="email" v-model="email" placeholder="e-mail" required>
+        <input class="centered-text" type="password" v-model="password" placeholder="Mot de passe" required>
+      </div>
+      <button class="btn btn-primary take-width" type="submit">Se connecter</button>
+      <button @click="register" class="btn btn-secondary take-width" style="margin-top: 1%">Pas de compte ? S'inscrire</button>
+    </form>
+  </div>
+</template>
+
+<script>
+module.exports = {
+  data () {
+    return {
+      email: "",
+      password: "",
+    }
+  },
+  methods: {
+    login () {
+      this.$emit('log-user', this.email, this.password)
+    },
+    register() {
+      window.location.hash = "#/register"
+    }
+  }
+}
+</script>
+
+<style scoped>
+  .no-overflow {
+    overflow-x: hidden
+  }
+
+  .centered {
+    margin: 0px auto;
+    justify-content: center;
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 500px;
+  }
+
+  .centered-text {
+    text-align: center;
+  }
+
+  .take-width {
+    width: 100%;
+  }
+</style>
