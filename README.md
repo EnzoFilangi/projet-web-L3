@@ -1,3 +1,5 @@
+remplir le .env
+
 # Install
 
 `npm install`
