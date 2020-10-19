@@ -17,7 +17,8 @@ var app = new Vue({
   data: {
     user: {
       id: null,
-      email: null
+      email: null,
+      username: null,
     },
     done: false
   },
@@ -28,9 +29,9 @@ var app = new Vue({
     this.done = true
   },
   methods: {
-    async registerUser (email, password) {
+    async registerUser (email, password, username) {
       try{
-        const res = await axios.post('/api/register', {email: email, password: password})
+        const res = await axios.post('/api/register', {email: email, password: password, username: username})
         alert("Vous êtes désormais enregistré !")
         window.location.hash = "#/" //On renvoie l'utilisateur sur la page d'accueil
       } catch (e) { //Gestion des erreurs de l'API
@@ -38,7 +39,9 @@ var app = new Vue({
           if (e.response.data.message.includes("request must include email and password")) {
             alert("Merci de compléter tous les champs.")
           } else if (e.response.data.message.includes("bad request - user already exists")) {
-            alert("Un utilisateur avec cet e-mail existe déjà.")
+            alert("Cet utilisateur existe déjà.")
+          } else if (e.response.data.message.includes("bad request - username must be shorter than 30 characters")) {
+            alert("Veuillez utiliser un nom d'utilisateur de moins de 30 caractères.") //Ne devrait pas se déclencher car vérifié auparavant part le component
           }
         } else {
           alert("Une erreur est survenue.")

@@ -3,7 +3,10 @@
     <h2>Création de compte</h2>
     <form @submit.prevent="register">
       <div class="form-group">
-        <input class="take-width centered-text" type="email" v-model="email" placeholder="e-mail" required>
+        <input class="take-width centered-text" type="email" v-model="email" placeholder="Email" required>
+      </div>
+      <div class="form-group">
+        <input class="take-width centered-text" type="text" v-model="username" placeholder="Nom d'utilisateur" maxlength="30" required>
       </div>
       <div class="form-group">
         <input class="centered-text" type="password" v-model="password" placeholder="Mot de passe" required>
@@ -20,6 +23,7 @@ module.exports = {
   data () {
     return {
       email: "",
+      username: "",
       password: "",
       password_verif: ""
     }
@@ -27,7 +31,7 @@ module.exports = {
   methods: {
     register () {
       if(this.password === this.password_verif){
-        this.$emit('register-user', this.email, this.password)
+        this.$emit('register-user', this.email, this.password, this.username)
       }
     }
   }

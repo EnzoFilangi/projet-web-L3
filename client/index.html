@@ -25,7 +25,7 @@
                 <ul class="navbar-nav ml-auto">
                     <li><router-link to='/register' class="nav-item nav-link" v-if="!user.id && done">S'enregistrer</router-link></li>
                     <li><router-link to='/login' class="nav-item nav-link" v-if="!user.id && done">Se connecter</router-link></li>
-                    <li><p v-if="user.email && done">Bonjour {{user.email}} !</p></li>
+                    <li><p v-if="user.username && done">Bonjour {{user.username}} !</p></li>
                 </ul>
             </nav>
           </header>
