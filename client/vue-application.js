@@ -1,11 +1,13 @@
 const Register = window.httpVueLoader('./components/Register.vue')
 const Login = window.httpVueLoader('./components/Login.vue')
 const Homepage = window.httpVueLoader('./components/Homepage.vue')
+const run = window.httpVueLoader('./components/run.vue')
 
 const routes = [
   { path: '/', component: Homepage },
   { path: '/register', component: Register },
   { path: '/login', component: Login },
+  {path: '/run/:id', component: run, name: 'run'}
 ]
 
 const router = new VueRouter({
@@ -74,6 +76,15 @@ var app = new Vue({
     async getUser () {
       const res = await axios.get('/api/me')
       this.user = res.data
+    },
+    async addRun (newRun,id_user) {
+
+      const res = await axios.post('/api/addrun', {id_user: id_user, title_run: newRun.title,game: newRun.game, content_text: newRun.content ,chrono: newRun.time,cover:newRun.cover , run_link:newRun.video_link })
+      this.test = res.data
+      vm.$forceUpdate();
+      console.log(this.test)
+
+
     }
   }
 })
