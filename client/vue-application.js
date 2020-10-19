@@ -1,8 +1,9 @@
 const Register = window.httpVueLoader('./components/Register.vue')
 const Login = window.httpVueLoader('./components/Login.vue')
+const Homepage = window.httpVueLoader('./components/Homepage.vue')
 
 const routes = [
-  { path: '/', component: Login },
+  { path: '/', component: Homepage },
   { path: '/register', component: Register },
   { path: '/login', component: Login },
 ]

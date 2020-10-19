@@ -20,6 +20,43 @@ router.use((req, res, next) => {
   next()
 })
 
+/*
+ * Cette route permet de récupérer une liste d'articles
+ * Le body doit contenir d'éventuels paramètres de recherche, ainsi que l'offset de lecture des articles
+ */
+router.get('/articles', async (req, res) => {
+  let offset = 0;
+  try {
+    offset = req.body.offset;
+  } catch (e) {} //Si aucun offset n'est spécifié dans la requête, on va générer une erreur que l'on ignore
+  let result, sql;
+  switch (req.body.order_by) {
+    case 'game':
+      const game = req.body.game;
+      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE game = $1 ORDER by id DESC LIMIT 20 OFFSET $2";
+      result = (await client.query({
+        text: sql,
+        values: [game, offset]
+      })).rows
+      break;
+    case 'user':
+      const user = req.body.user;
+      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE owner = $1 ORDER by id DESC LIMIT 20 OFFSET $2";
+      result = (await client.query({
+        text: sql,
+        values: [user, offset]
+      })).rows
+      break;
+    default:
+      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles ORDER by id DESC LIMIT 20 OFFSET $1";
+      result = (await client.query({
+        text: sql,
+        values: [offset]
+      })).rows
+  }
+  res.status(200).json(result)
+})
+
 
 /*
  * Cette route permet d'ajouter un nouvel article/ run
@@ -76,7 +113,7 @@ router.patch('/runmodif', async (req, res) => {
   let run_link = req.body.run_link
   const id_article = req.body.id_article
   if(!id_user){
-    res.status(400).json({message: "bad request - request must content an id"});
+    res.status(400).json({message: "bad request - request must contain an id"});
   }
   else{
 
@@ -93,7 +130,7 @@ router.patch('/runmodif', async (req, res) => {
     })).rows
 
   console.log("1")
-    if (result.length === 1 && result2.length === 1 &&(result[0].admin || result2[0].owner == id_user)) {
+    if (result.length === 1 && result2.length === 1 && (result[0].admin || parseInt(result2[0].owner) === parseInt(id_user))) {
       console.log("12")
       if(!title_run){
         title_run=result2[0].title
