@@ -2,9 +2,23 @@
     <div v-if="done && user.id" class="no-overflow">
         <h2>Articles les plus récents </h2>
         <hr>
-        <div class="card-deck " >
+        <!-- Propositions de tri -->
+        <div>
+            <p style="display: inline">Trier par :</p>
+            <select v-model="order_by" >
+                <option value="date" selected>Date</option>
+                <option value="game">Jeu</option>
+                <option value="user">Utilisateur</option>
+            </select>
+            <div v-if="order_by === 'game' || order_by === 'user'" style="display: inline">
+                <input type="search" v-model="selection_criteria" v-bind:placeholder="search_placeholder">
+            </div>
+            <button @click="refreshArticles()" class="btn btn-secondary btn-sm">Rechercher</button>
+        </div>
+        <hr>
+        <!-- Affichage des articles -->
+        <div class="card-deck">
             <article v-for="article in articles" :key="article.id" class="card" v-on:click="navigateArticle(article.id)">
-
                 <img :src="article.cover" alt="cover image" class="image" v-if=article.cover>
                 <span class="card-img-top" v-else></span>
                 <div class="card-body">
@@ -16,51 +30,44 @@
             </article>
         </div>
 
+        <!-- Modal d'ajout d'article -->
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addArticleModal" data-whatever="@mdo">Ajouter une nouvelle run</button>
 
-      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">Ajouter une nouvelle run</button>
-
-
-      <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-
-
-
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="exampleModalLabel">New message</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
+        <div class="modal fade" id="addArticleModal" tabindex="-1" role="dialog" aria-labelledby="addArticleModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="addArticleModalLabel">Ajouter une nouvelle run</h2>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Formulaire d'ajout / corps du modal -->
+                        <form @submit.prevent="addRun">
+                            <input class="h2" v-model="newRun.title" placeholder="Titre" type="text" required class="max_width">
+                            <div class="form-group">
+                                <input v-model="newRun.game" placeholder="Jeu" required type="text">
+                                <small class="text-muted h4">-</small>
+                                <input v-model="newRun.time" placeholder="Temps" required type="text">
+                            </div>
+                            <div class="form-group">
+                                <textarea v-model="newRun.content" required type="text" class="max_width"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <input v-model="newRun.cover" type="url" required placeholder="Lien vers l'image de couverture" class="max_width">
+                            </div>
+                            <div class="form-group">
+                                <input v-model="newRun.video_link" type="url" required placeholder="Lien vers la preuve vidéo"  pattern=".*\.(youtube|twitch)\..*" title="L'URL doit être un lien youtube ou twitch." class="max_width">
+                            </div>
+                            <button class="btn btn-primary" type="submit">Ajouter</button>
+                            <button class="btn btn-danger" type="button" @click="reset()">Tout supprimer</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-              <form @submit.prevent="addRun">
-                <h2>Nouveau produit à ajouter</h2>
-                <div class="form-group">
-                  <input  v-model="newRun.title" placeholder="titre" required type="text">
-                  <input  v-model="newRun.game" placeholder="jeux" required type="text">
-                  <input  v-model="newRun.time" placeholder="time" required type="text">
-
-                </div>
-                <div class="form-group">
-                  <textarea  v-model="newRun.content" required type="text"></textarea>
-                </div>
-                <div class="form-group">
-                  <input v-model="newRun.cover" placeholder="Lien vers l'image de cover" type="text">
-                  <input v-model="newRun.video_link" placeholder="Lien vers l'image la video de la run (twitch ou youtube)" type="text">
-                </div>
-                <button class="btn btn-primary"  type="submit">Ajouter</button>
-              </form>
-
-            </div>
-          </div>
         </div>
-
-
-      </div>
-
-
     </div>
-
 </template>
 
 <script>
@@ -79,7 +86,6 @@
                 game: '',
                 time: '',
                 content: '',
-
               },
                 done: false,
                 offset: 0,
@@ -98,33 +104,63 @@
             this.done = true
         },
         methods: {
-          addRun() {
-            this.$emit('add-run', this.newRun, this.user.id)
-          },
-            async getUser () {
+            addRun() {
+                this.$emit('add-run', this.newRun, this.user.id)
+            },
+            async getUser() {
                 const res = await axios.get('/api/me')
                 this.user = res.data
             },
             login() {
                 window.location.hash = "#/login"
             },
-            async getArticles () {
+            async getArticles() {
                 switch (this.order_by) {
                     case 'game':
-                        return (await axios.get('/api/articles', {offset: this.offset, order_by: "game", game: this.selection_criteria})).data
+                        return (await axios.get('/api/articles', {
+                            params: {
+                                offset: this.offset,
+                                order_by: "game",
+                                game: this.selection_criteria
+                            }
+                        })).data
                     case 'user':
-                        return (await axios.get('/api/articles', {offset: this.offset, order_by: "user", user: this.selection_criteria})).data
+                        return (await axios.get('/api/articles', {
+                            params: {
+                                offset: this.offset,
+                                order_by: "user",
+                                user: this.selection_criteria
+                            }
+                        })).data
                     default:
-                        const result = await axios.get('/api/articles', {offset: this.offset})
-                        return result.data
+                        return (await axios.get('/api/articles', {params: {offset: this.offset}})).data
                 }
             },
-      navigateArticle(id) {
-        router.replace({
-          name: 'run', params: {id: id.toString()}
-        })
-        console.log("aaaaaaaaaa")
-      }
+            async refreshArticles () {
+                this.articles = await this.getArticles()
+            },
+            reset () {
+                if(confirm("Voulez-vous vraiment supprimer ?")){
+                    this.newRun = {
+                        video_link: '',
+                        cover: '',
+                        title: '',
+                        game: '',
+                        time: '',
+                        content: '',
+                    }
+                }
+            },
+            navigateArticle(id) {
+                router.replace({
+                  name: 'run', params: {id: id.toString()}
+                })
+            }
+        },
+        computed: {
+            search_placeholder () {
+                return 'Chercher un ' + (this.order_by === 'game' ? 'jeu' : 'utilisateur');
+            }
         }
     }
 </script>
@@ -136,6 +172,8 @@
 
     article {
         max-height: 50em;
+        min-width: 30em;
+        max-width: 60em;
     }
 
     .image {
@@ -146,5 +184,17 @@
     article span {
         background: rgba(0, 0, 0, 0.125);
         height: 25em;
+    }
+
+    textarea {
+        min-height: 20em;
+    }
+
+    .max_width {
+        width: 100%;
+    }
+
+    .modal-dialog {
+        max-width: 50%;
     }
 </style>

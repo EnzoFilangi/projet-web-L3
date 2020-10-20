@@ -1,6 +1,5 @@
 <template>
   <div v-if="articles !== []" id="main">
-
     <div v-for="i in [articles.find(a => a.id === parseInt(this.id))]" v-if="i !== undefined" id="article">
       <h2 >{{i.title}} </h2>
       <h4 >{{i.chrono}} - {{i.game}}</h4>

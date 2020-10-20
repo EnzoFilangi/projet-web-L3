@@ -27,12 +27,12 @@ router.use((req, res, next) => {
 router.get('/articles', async (req, res) => {
   let offset = 0;
   try {
-    offset = req.body.offset;
+    offset = req.query.offset;
   } catch (e) {} //Si aucun offset n'est spécifié dans la requête, on va générer une erreur que l'on ignore
   let result, sql;
-  switch (req.body.order_by) {
+  switch (req.query.order_by) {
     case 'game':
-      const game = req.body.game;
+      const game = req.query.game;
       sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE game = $1 ORDER by id DESC LIMIT 20 OFFSET $2";
       result = (await client.query({
         text: sql,
@@ -40,7 +40,7 @@ router.get('/articles', async (req, res) => {
       })).rows
       break;
     case 'user':
-      const user = req.body.user;
+      const user = req.query.user;
       sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE owner = $1 ORDER by id DESC LIMIT 20 OFFSET $2";
       result = (await client.query({
         text: sql,
@@ -85,7 +85,7 @@ router.post('/addrun', async (req, res) => {
       const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2,$3, $4,$5, $6,$7)"
       await client.query({
         text: sql_insert,
-        values: [id_user, title_run,game, content_text,chrono,cover,run_link]
+        values: [id_user, title_run, game, content_text, chrono, cover, run_link]
       });
 
       res.status(200).json({message: "ok"})
@@ -102,8 +102,6 @@ router.post('/addrun', async (req, res) => {
  */
 
 router.patch('/runmodif', async (req, res) => {
-
-
   const id_user = req.body.id_user;
   let title_run = req.body.title_run;
   let game = req.body.game;
