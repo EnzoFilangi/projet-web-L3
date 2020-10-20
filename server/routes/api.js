@@ -29,32 +29,46 @@ router.get('/articles', async (req, res) => {
   try {
     offset = req.query.offset;
   } catch (e) {} //Si aucun offset n'est spécifié dans la requête, on va générer une erreur que l'on ignore
-  let result, sql;
+  let result;
+  let sql = "SELECT id, " +
+            "(SELECT username FROM users WHERE id = articles.owner) as owner," +
+            " title, " +
+            "(SELECT display_name FROM games WHERE id = articles.game) as game," +
+            " content, chrono, cover FROM articles "
   switch (req.query.order_by) {
     case 'game':
-      const game = "%" + req.query.game + "%";
-      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE game LIKE $1 ORDER by id DESC LIMIT 20 OFFSET $2";
+      const game = req.query.game.toLowerCase().replace(/[#_%]/g,'').replace(/[\-]/g, ' ');
+      sql += "WHERE game = (SELECT id FROM games WHERE name = $1 LIMIT 1) ORDER by id DESC LIMIT 20 OFFSET $2";
       result = (await client.query({
         text: sql,
         values: [game, offset]
       })).rows
       break;
     case 'user':
-      const user = "%" + req.query.user + "%";
-      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE owner LIKE $1 ORDER by id DESC LIMIT 20 OFFSET $2";
+      const user = req.query.user;
+      sql += "WHERE owner = (SELECT id FROM users WHERE username = $1 LIMIT 1) ORDER by id DESC LIMIT 20 OFFSET $2";
       result = (await client.query({
         text: sql,
         values: [user, offset]
       })).rows
       break;
     default:
-      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles ORDER by id DESC LIMIT 20 OFFSET $1";
+      sql += "ORDER by id DESC LIMIT 20 OFFSET $1";
       result = (await client.query({
         text: sql,
         values: [offset]
       })).rows
   }
   res.status(200).json(result)
+})
+
+router.get('/game', async (req, res) => {
+  const game = "%" + req.query.gameString.toLowerCase().replace(/[#_%]/g,'').replace(/[\-]/g, ' ') + "%";
+  const result = (await client.query({
+    text: "SELECT name, display_name FROM games WHERE name LIKE $1",
+    values: [game]
+  })).rows;
+  res.status(200).json(result);
 })
 
 

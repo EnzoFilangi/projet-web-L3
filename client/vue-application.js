@@ -81,8 +81,6 @@ var app = new Vue({
 
       const res = await axios.post('/api/addrun', {id_user: id_user, title_run: newRun.title,game: newRun.game, content_text: newRun.content ,chrono: newRun.time,cover:newRun.cover , run_link:newRun.video_link })
       this.test = res.data
-      vm.$forceUpdate();
-      console.log(this.test)
 
 
     }

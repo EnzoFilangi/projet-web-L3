@@ -10,8 +10,16 @@
                 <option value="game">Jeu</option>
                 <option value="user">Utilisateur</option>
             </select>
-            <div v-if="order_by === 'game' || order_by === 'user'" style="display: inline">
-                <input type="search" v-model="selection_criteria" v-bind:placeholder="search_placeholder">
+            <div v-if="order_by === 'game' || order_by === 'user'" style="display: inline; position: relative">
+                <input type="text" v-model="selection_criteria" @keydown.tab.prevent="autocomplete(0)" @input="autocompleteTimeOut">
+                <table class="autocomplete">
+                    <tbody>
+                    <tr v-for="(auto, i) in autocomplete_possibilities" @click="autocomplete(i)">
+                        <td v-if="order_by === 'game'">{{auto.display_name}}</td>
+                        <td v-else-if="order_by === 'user'">{{auto.username}}</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
             <button @click="refreshArticles()" class="btn btn-secondary btn-sm">Rechercher</button>
         </div>
@@ -26,9 +34,9 @@
                     <h4 class="text-muted">{{article.chrono}} - {{article.game}}</h4>
                     <pre class="card-text p">{{article.content}}</pre>
                 </div>
-
             </article>
         </div>
+        <h4 v-if="articles.length === 0"> Pas d'article trouvé !</h4>
 
         <!-- Modal d'ajout d'article -->
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addArticleModal" data-whatever="@mdo">Ajouter une nouvelle run</button>
@@ -91,6 +99,8 @@
                 offset: 0,
                 order_by: null,
                 selection_criteria: null,
+                autocomplete_possibilities: [],
+                autocomplete_timer: null,
                 articles: [],
             }
         },
@@ -151,11 +161,41 @@
                     }
                 }
             },
-            navigateArticle(id) {
+            navigateArticle (id) {
                 router.replace({
                   name: 'run', params: {id: id.toString()}
                 })
-            }
+            },
+            async autocomplete (i) {
+                if(this.order_by === 'game') {
+                    this.selection_criteria = this.autocomplete_possibilities[i].name;
+                } else if (this.order_by === 'user') {
+                    this.selection_criteria = this.autocomplete_possibilities[i].username;
+                }
+                await this.refreshArticles();
+                this.selection_criteria = '';
+                this.autocomplete_possibilities = [];
+            },
+            autocompleteTimeOut() {
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+                this.timer = setTimeout(() => {
+                    this.reloadAutocomplete()
+                }, 300);
+            },
+            async reloadAutocomplete () {
+                if (this.selection_criteria.length > 1){
+                    this.autocomplete_possibilities = (await axios.get('/api/game', {
+                        params: {
+                            gameString: this.selection_criteria
+                        }
+                    })).data
+                } else {
+                    this.autocomplete_possibilities = [];
+                }
+            },
         },
         computed: {
             search_placeholder () {
@@ -196,5 +236,14 @@
 
     .modal-dialog {
         max-width: 50%;
+    }
+
+    .autocomplete {
+        position: absolute;
+        top: 2em;
+        left: 0;
+        z-index: 999999;
+        background: gray;
+        border: 1px solid black;
     }
 </style>
