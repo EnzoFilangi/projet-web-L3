@@ -32,16 +32,16 @@ router.get('/articles', async (req, res) => {
   let result, sql;
   switch (req.query.order_by) {
     case 'game':
-      const game = req.query.game;
-      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE game = $1 ORDER by id DESC LIMIT 20 OFFSET $2";
+      const game = "%" + req.query.game + "%";
+      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE game LIKE $1 ORDER by id DESC LIMIT 20 OFFSET $2";
       result = (await client.query({
         text: sql,
         values: [game, offset]
       })).rows
       break;
     case 'user':
-      const user = req.query.user;
-      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE owner = $1 ORDER by id DESC LIMIT 20 OFFSET $2";
+      const user = "%" + req.query.user + "%";
+      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover FROM articles WHERE owner LIKE $1 ORDER by id DESC LIMIT 20 OFFSET $2";
       result = (await client.query({
         text: sql,
         values: [user, offset]
@@ -182,7 +182,7 @@ router.post('/register', async (req, res) => {
     if (query.rows.length > 0) {
       res.status(400).json({message: "bad request - user already exists"})
     } else {
-      const sql_insert = "INSERT INTO users (email, password, username) VALUES ($1, $2, $3)"
+      const sql_insert = "INSERT INTO users (email, password, username, admin) VALUES ($1, $2, $3, FALSE)"
       await client.query({
         text: sql_insert,
         values: [email, password, username]
