@@ -20,7 +20,7 @@ router.use((req, res, next) => {
   next()
 })
 
-/*
+/**
  * Cette route permet de récupérer une liste d'articles
  * Le body doit contenir d'éventuels paramètres de recherche, ainsi que l'offset de lecture des articles
  */
@@ -37,7 +37,7 @@ router.get('/articles', async (req, res) => {
             " content, chrono, cover FROM articles "
   switch (req.query.order_by) {
     case 'game':
-      const game = req.query.game.toLowerCase().replace(/[#_%]/g,'').replace(/[\-]/g, ' ');
+      const game = sanitizeGameName(req.query.game);
       sql += "WHERE game = (SELECT id FROM games WHERE name = $1 LIMIT 1) ORDER by id DESC LIMIT 20 OFFSET $2";
       result = (await client.query({
         text: sql,
@@ -62,19 +62,49 @@ router.get('/articles', async (req, res) => {
   res.status(200).json(result)
 })
 
+
+/**
+ * Cette route retourne le nombre total d'articles dans la base de données affichables selon les critères de recherche
+ * Elle doit recevoir deux paramètres :
+ * orderBy: 'game'|'user' ; défini quelle table rechercher (facultatif)
+ * searchString: string ; défini le critère de recherche (ignoré si orderBy n'est pas présent)
+ */
 router.get('/articleQuantity', async (req, res) => {
-  const result = ( await client.query({
-    text: "SELECT COUNT(*) FROM articles"
-  })).rows[0]
-  res.status(200).json(result)
+  let result;
+  switch (req.query.orderBy) {
+    case 'game':
+      const game = sanitizeGameName(req.query.searchString);
+      result = ( await client.query({
+        text: "SELECT COUNT(*) FROM articles WHERE game = (SELECT id FROM games WHERE name = $1 LIMIT 1)",
+        values: [game]
+      })).rows[0]
+      res.status(200).json(result)
+      break;
+    case 'user':
+      result = ( await client.query({
+        text: "SELECT COUNT(*) FROM articles WHERE owner = (SELECT id FROM users WHERE username = $1)",
+        values: [req.query.searchString]
+      })).rows[0]
+      res.status(200).json(result)
+      break;
+    default:
+      result = ( await client.query({
+        text: "SELECT COUNT(*) FROM articles"
+      })).rows[0]
+      res.status(200).json(result)
+  }
 })
 
-router.get('/search', async (req, res) => {
+/**
+ * Cette route retourne le nom d'affichage d'un jeu ou d'un utilisateur basé sur une partie seulement de son nom
+ * Elle doit recevoir deux paramètres :
+ * orderBy: 'game'|'user' ; défini quelle table rechercher
+ * searchString: string ; défini le critère de recherche
+ */
+router.get('/searchName', async (req, res) => {
   const order_by = req.query.orderBy;
-  const regex_void = /[#_%.]/g;
-  const regex_space = /[\-]/g;
   if (order_by === 'game') {
-    const game = "%" + req.query.searchString.toLowerCase().replace(regex_void,'').replace(regex_space, ' ') + "%";
+    const game = "%" + sanitizeGameName(req.query.searchString) + "%";
     const result = (await client.query({
       text: "SELECT name, display_name FROM games WHERE name LIKE $1",
       values: [game]
@@ -92,7 +122,7 @@ router.get('/search', async (req, res) => {
 })
 
 
-/*
+/**
  * Cette route permet d'ajouter un nouvel article/ run
  * Le body doit contenir l'id de l'utilisateur, le titre de la run, le jeu, le contenue, le temps, une image de couverture et le liens vers la video
  */
@@ -130,11 +160,10 @@ router.post('/addrun', async (req, res) => {
 
 })
 
-/*
+/**
  * Cette route permet de modifier article/ run
  * Le body doit contenir l'id de l'utilisateur, le titre de la run, le jeu, le contenue, le temps, une image de couverture et le liens vers la video
  */
-
 router.patch('/runmodif', async (req, res) => {
   const id_user = req.body.id_user;
   let title_run = req.body.title_run;
@@ -193,7 +222,7 @@ router.patch('/runmodif', async (req, res) => {
 
 })
 
-/*
+/**
  * Cette route permet d'ajouter un nouvel utilisateur
  * Le body doit contenir l'email et le mot de passe de l'utilisateur
  */
@@ -226,7 +255,7 @@ router.post('/register', async (req, res) => {
   }
 })
 
-/*
+/**
  * Cette router permet d'authentifier un utilisateur
  * Le body doit contenir l'email et le password de l'utilisateur
  */
@@ -256,7 +285,7 @@ router.post('/login', async (req, res) => {
   }
 })
 
-/*
+/**
  * Cette route retourne l'utilisateur actuellement connecté
  */
 router.get('/me', async (req, res) => {
@@ -277,3 +306,9 @@ router.get('/me', async (req, res) => {
 })
 
 module.exports = router
+
+function sanitizeGameName(game) {
+  const regex_void = /[#_%.*/='"]/g;
+  const regex_space = /[\-]/g;
+  return game.toLowerCase().replace(regex_void,'').replace(regex_space, ' ')
+}

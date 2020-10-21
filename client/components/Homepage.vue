@@ -6,14 +6,14 @@
             <!-- Propositions de tri -->
             <div>
                 <p style="display: inline">Trier par :</p>
-                <select v-model="order_by" >
+                <select v-model="order_by" @change="resetSelectionCriteria()">
                     <option value="date" selected>Date</option>
                     <option value="game">Jeu</option>
                     <option value="user">Utilisateur</option>
                 </select>
                 <!-- Autocomplétion -->
                 <div v-if="order_by === 'game' || order_by === 'user'" style="display: inline; position: relative">
-                    <input type="text" v-model="selection_criteria" @keydown.tab.prevent="autocomplete(0)" @input="autocompleteTimeOut">
+                    <input type="text" v-model="selection_criteria" @keydown.tab.prevent="autocomplete(0)" @input="autocompleteTimeOut" :placeholder="search_placeholder">
                     <ul class="autocomplete not-centered" v-if="autocomplete_possibilities.length > 0">
                         <li v-for="(auto, i) in autocomplete_possibilities" @click="autocomplete(i)">
                             <td v-if="order_by === 'game'">{{auto.display_name}}</td>
@@ -21,7 +21,7 @@
                         </li>
                     </ul>
                 </div>
-                <button @click="refreshArticles()" class="btn btn-secondary btn-sm">Rechercher</button>
+                <button @click="search()" class="btn btn-secondary btn-sm">Rechercher</button>
             </div>
             <hr>
 
@@ -42,7 +42,7 @@
             <!-- Page suivante / précédente -->
             <div class="btn-group" role="group" aria-label="Boutons de navigation d'articles">
                 <button class="btn btn-secondary" :disabled="isOffsetZero" @click="changePage(-20)">Page précédente</button>
-                <button class="btn btn-secondary" @click="changePage(20)">Page suivante</button>
+                <button class="btn btn-secondary" :disabled="disable_next_page" @click="changePage(20)">Page suivante</button>
             </div>
             <p>Page {{this.offset/20 + 1}}</p>
             <hr>
@@ -113,6 +113,7 @@
                 autocomplete_timer: null,
                 articles: [], // Articles à afficher
                 title: "", // Titre de la page, mis à jours lors de la récupération des articles
+                disable_next_page: false,
             }
         },
         async mounted() {
@@ -139,7 +140,7 @@
                 switch (this.order_by) {
                     case 'game':
                         try {
-                            const game = (await axios.get('/api/search', {params: {orderBy: 'game', searchString: this.selection_criteria}})).data[0].display_name;
+                            const game = (await axios.get('/api/searchName', {params: {orderBy: 'game', searchString: this.selection_criteria}})).data[0].display_name;
                             this.title = "Articles sur le jeu " + game;
                         } catch (e) {}
                         return (await axios.get('/api/articles', {
@@ -163,10 +164,22 @@
                         return (await axios.get('/api/articles', {params: {offset: this.offset}})).data
                 }
             },
+            resetSelectionCriteria () {
+                this.selection_criteria = '';
+            },
+            async search () {
+                this.offset = 0;
+                await this.refreshArticles()
+            },
             async refreshArticles () {
                 this.articles = await this.getArticles()
                 if (this.articles.length === 0) {
                     this.title = "Pas d'article trouvé !";
+                    this.disable_next_page = true;
+                } else if (this.articles.length < 20) {
+                    this.disable_next_page = true;
+                } else {
+                    this.disable_next_page = false;
                 }
             },
             reset () {
@@ -199,9 +212,8 @@
                     this.selection_criteria = this.autocomplete_possibilities[i].username;
                 }
                 // On recharge les articles avec le nouveau critère de sélection
-                await this.refreshArticles();
+                await this.search();
                 // On réinitialise les critères de recherche une fois celle-ci effectuée
-                this.selection_criteria = '';
                 this.autocomplete_possibilities = [];
             },
             autocompleteTimeOut() {
@@ -217,7 +229,7 @@
             async reloadAutocomplete () {
                 // Recharge les résultats d'autocomplétion depuis le serveur
                 if (this.selection_criteria.length > 1){ // L'utilisateur doit avoir entré au moins 2 caractères pour que la recherche s'effectue
-                    this.autocomplete_possibilities = (await axios.get('/api/search', {
+                    this.autocomplete_possibilities = (await axios.get('/api/searchName', {
                         params: {
                             orderBy: this.order_by,
                             searchString: this.selection_criteria
@@ -237,10 +249,14 @@
                 }
             },
             async changePage (offset_delta) {
+                this.disable_next_page = false;
                 this.offset += offset_delta;
-                const max = parseInt((await axios.get('/api/articleQuantity')).data.count)
+                const max = parseInt((await axios.get('/api/articleQuantity', {params: {orderBy: this.order_by, searchString: this.selection_criteria}})).data.count)
+
                 if (this.offset < 0) this.offset = 0;
                 else if (this.offset > max) this.offset = Math.floor(max/20)*20; // On ramène au multiple de 20 le plus proche en dessous de la valeur maximale
+                if (this.offset === Math.floor(max/20)*20) this.disable_next_page = true; // On test si on a atteint la page finale ; on ne se content pas de le mettre dans le if au dessus sinon la condition ne se déclenche pas la première fois que l'on atteint la page maximale
+
                 await this.refreshArticles();
             }
         },
