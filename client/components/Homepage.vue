@@ -2,6 +2,7 @@
     <div v-if="done && user.id" class="no-overflow">
         <h2>Articles les plus récents </h2>
         <hr>
+
         <!-- Propositions de tri -->
         <div>
             <p style="display: inline">Trier par :</p>
@@ -26,6 +27,7 @@
         <!-- Affichage des articles -->
         <div class="card-deck">
             <article v-for="article in articles" :key="article.id" class="card" v-on:click="navigateArticle(article.id)">
+
                 <img :src="article.cover" alt="cover image" class="image" v-if=article.cover>
                 <span class="card-img-top" v-else></span>
                 <div class="card-body">
@@ -33,6 +35,8 @@
                     <h4 class="text-muted">{{article.chrono}} - {{article.game}}</h4>
                     <pre class="card-text p">{{article.content}}</pre>
                 </div>
+
+
             </article>
         </div>
         <h4 v-if="articles.length === 0"> Pas d'article trouvé !</h4>
@@ -75,6 +79,7 @@
             </div>
         </div>
     </div>
+
 </template>
 
 <script>
@@ -86,6 +91,7 @@
                     email: null,
                     username: null,
                 },
+
                 newRun: {
                     video_link: '',
                     cover: '',
@@ -113,16 +119,19 @@
             this.done = true
         },
         methods: {
+
             addRun() {
                 this.$emit('add-run', this.newRun, this.user.id)
             },
             async getUser() {
+
                 const res = await axios.get('/api/me')
                 this.user = res.data
             },
             login() {
                 window.location.hash = "#/login"
             },
+
             async getArticles() {
                 switch (this.order_by) {
                     case 'game':
@@ -207,6 +216,7 @@
             search_placeholder () {
                 return 'Chercher un ' + (this.order_by === 'game' ? 'jeu' : 'utilisateur');
             }
+
         }
     }
 </script>
@@ -218,8 +228,10 @@
 
     article {
         max-height: 50em;
+
         min-width: 30em;
         max-width: 60em;
+
     }
 
     .image {
@@ -231,6 +243,7 @@
         background: rgba(0, 0, 0, 0.125);
         height: 25em;
     }
+
 
     textarea {
         min-height: 20em;
@@ -259,4 +272,5 @@
     .autocomplete li {
         padding-left: -10px;
     }
+
 </style>

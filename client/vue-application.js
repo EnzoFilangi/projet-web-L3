@@ -79,8 +79,9 @@ var app = new Vue({
     },
     async addRun (newRun,id_user) {
       try {
-      var video_embed = newRun.video_link.replace('watch?v=', '');
-      video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
+        var video_embed =newRun.run_link.split('/embed').join('');
+        video_embed = video_embed.replace('watch?v=', '');
+        video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
       const res = await axios.post('/api/addrun', {id_user: id_user, title_run: newRun.title,game: newRun.game, content_text: newRun.content ,chrono: newRun.time,cover:newRun.cover , run_link:video_embed })
       } catch (e) { //Gestion des erreurs de l'API
         if (e.response.status === 400) {
@@ -94,7 +95,7 @@ var app = new Vue({
 
     },async updateRun (newRun,id_user,id) {
       try {
-      var video_embed =newRun.run_link.split('/embed').join('')
+      var video_embed =newRun.run_link.split('/embed').join('');
       video_embed = video_embed.replace('watch?v=', '');
       video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
 
