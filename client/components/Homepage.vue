@@ -11,9 +11,10 @@
                     <option value="game">Jeu</option>
                     <option value="user">Utilisateur</option>
                 </select>
+                <!-- Autocomplétion -->
                 <div v-if="order_by === 'game' || order_by === 'user'" style="display: inline; position: relative">
                     <input type="text" v-model="selection_criteria" @keydown.tab.prevent="autocomplete(0)" @input="autocompleteTimeOut">
-                    <ul class="autocomplete" v-if="autocomplete_possibilities.length > 0">
+                    <ul class="autocomplete not-centered" v-if="autocomplete_possibilities.length > 0">
                         <li v-for="(auto, i) in autocomplete_possibilities" @click="autocomplete(i)">
                             <td v-if="order_by === 'game'">{{auto.display_name}}</td>
                             <td v-else-if="order_by === 'user'">{{auto.username}}</td>
@@ -36,6 +37,15 @@
                     </div>
                 </article>
             </div>
+            <hr>
+
+            <!-- Page suivante / précédente -->
+            <div class="btn-group" role="group" aria-label="Boutons de navigation d'articles">
+                <button class="btn btn-secondary" :disabled="isOffsetZero" @click="changePage(-20)">Page précédente</button>
+                <button class="btn btn-secondary" @click="changePage(20)">Page suivante</button>
+            </div>
+            <p>Page {{this.offset/20 + 1}}</p>
+            <hr>
 
             <!-- Modal d'ajout d'article -->
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addArticleModal" data-whatever="@mdo">Ajouter une nouvelle run</button>
@@ -225,11 +235,21 @@
                 } else {
                     return content.slice(0, max_char) + "...";
                 }
+            },
+            async changePage (offset_delta) {
+                this.offset += offset_delta;
+                const max = parseInt((await axios.get('/api/articleQuantity')).data.count)
+                if (this.offset < 0) this.offset = 0;
+                else if (this.offset > max) this.offset = Math.floor(max/20)*20; // On ramène au multiple de 20 le plus proche en dessous de la valeur maximale
+                await this.refreshArticles();
             }
         },
         computed: {
             search_placeholder () {
                 return 'Chercher un ' + (this.order_by === 'game' ? 'jeu' : 'utilisateur');
+            },
+            isOffsetZero () {
+                return this.offset === 0;
             }
         }
     }
@@ -243,6 +263,14 @@
     .centered {
         margin: 0 auto;
         text-align: center;
+    }
+
+    .not-centered {
+        text-align: left;
+    }
+
+    .card {
+        margin-bottom: 30px;
     }
 
     article {
@@ -278,7 +306,7 @@
         top: 2em;
         left: 0;
         z-index: 999999;
-        background: rgba(0, 0, 0, 0.25);
+        background: lightskyblue;
         border: 1px solid black;
         max-height: 10em;
         overflow: auto;
@@ -287,5 +315,9 @@
 
     .autocomplete li {
         padding-left: -10px;
+    }
+
+    .btn-group .btn {
+        width: 10em;
     }
 </style>

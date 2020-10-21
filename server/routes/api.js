@@ -62,6 +62,13 @@ router.get('/articles', async (req, res) => {
   res.status(200).json(result)
 })
 
+router.get('/articleQuantity', async (req, res) => {
+  const result = ( await client.query({
+    text: "SELECT COUNT(*) FROM articles"
+  })).rows[0]
+  res.status(200).json(result)
+})
+
 router.get('/search', async (req, res) => {
   const order_by = req.query.orderBy;
   const regex_void = /[#_%.]/g;
@@ -109,7 +116,7 @@ router.post('/addrun', async (req, res) => {
 
     if (result.length === 1) {
 
-      const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2,$3, $4,$5, $6,$7)"
+        const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2,$3, $4,$5, $6,$7)"
       await client.query({
         text: sql_insert,
         values: [id_user, title_run, game, content_text, chrono, cover, run_link]
