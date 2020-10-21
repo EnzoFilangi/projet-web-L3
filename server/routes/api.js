@@ -27,34 +27,68 @@ router.use((req, res, next) => {
 router.get('/articles', async (req, res) => {
   let offset = 0;
   try {
-    offset = req.body.offset;
+
+    offset = req.query.offset;
   } catch (e) {} //Si aucun offset n'est spécifié dans la requête, on va générer une erreur que l'on ignore
-  let result, sql;
-  switch (req.body.order_by) {
+  let result;
+  let sql = "SELECT id, " +
+            "(SELECT username FROM users WHERE id = articles.owner) as owner," +
+            " title, " +
+            "(SELECT display_name FROM games WHERE id = articles.game) as game," +
+            " content, chrono, cover FROM articles "
+  switch (req.query.order_by) {
     case 'game':
-      const game = req.body.game;
-      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, cover, run_link, FROM articles WHERE game = $1 ORDER by id DESC LIMIT 20 OFFSET $2";
+      const game = req.query.game.toLowerCase().replace(/[#_%]/g,'').replace(/[\-]/g, ' ');
+      sql += "WHERE game = (SELECT id FROM games WHERE name = $1 LIMIT 1) ORDER by id DESC LIMIT 20 OFFSET $2";
+
       result = (await client.query({
         text: sql,
         values: [game, offset]
       })).rows
       break;
     case 'user':
-      const user = req.body.user;
-      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, run_link, cover FROM articles WHERE owner = $1 ORDER by id DESC LIMIT 20 OFFSET $2";
+
+      const user = req.query.user;
+      sql += "WHERE owner = (SELECT id FROM users WHERE username = $1 LIMIT 1) ORDER by id DESC LIMIT 20 OFFSET $2";
+
       result = (await client.query({
         text: sql,
         values: [user, offset]
       })).rows
       break;
     default:
-      sql = "SELECT id, (SELECT username FROM users WHERE id = articles.owner) as owner, title, game, content, chrono, run_link, cover FROM articles ORDER by id DESC LIMIT 20 OFFSET $1";
+
+      sql += "ORDER by id DESC LIMIT 20 OFFSET $1";
+
       result = (await client.query({
         text: sql,
         values: [offset]
       })).rows
   }
   res.status(200).json(result)
+})
+
+
+router.get('/search', async (req, res) => {
+  const order_by = req.query.orderBy;
+  const regex_void = /[#_%.]/g;
+  const regex_space = /[\-]/g;
+  if (order_by === 'game') {
+    const game = "%" + req.query.searchString.toLowerCase().replace(regex_void,'').replace(regex_space, ' ') + "%";
+    const result = (await client.query({
+      text: "SELECT name, display_name FROM games WHERE name LIKE $1",
+      values: [game]
+    })).rows;
+    res.status(200).json(result);
+  } else {
+    const user = "%" + req.query.searchString + "%";
+    const result = (await client.query({
+      text: "SELECT username FROM users WHERE username LIKE $1",
+      values: [user]
+    })).rows;
+    res.status(200).json(result);
+  }
+
 })
 
 
@@ -90,7 +124,7 @@ router.post('/addrun', async (req, res) => {
       const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2,$3, $4,$5, $6,$7)"
       await client.query({
         text: sql_insert,
-        values: [id_user, title_run,game, content_text,chrono,cover,run_link]
+        values: [id_user, title_run, game, content_text, chrono, cover, run_link]
       });
 
       res.status(200).json({message: "ok"})
@@ -107,6 +141,7 @@ router.post('/addrun', async (req, res) => {
  */
 
 router.patch('/runmodif', async (req, res) => {
+
   //on recupere les variables
 
   const id_user = req.body.id_user;
@@ -136,7 +171,6 @@ router.patch('/runmodif', async (req, res) => {
       text: sql2,
       values: [id_article]
     })).rows
-
     if (result.length === 1 && result2.length === 1 && (result[0].admin || parseInt(result2[0].owner) === parseInt(id_user))) {
       //si aucune nouvelle valeur est fournie on garde l'ancienne
 
@@ -191,7 +225,7 @@ router.post('/register', async (req, res) => {
     if (query.rows.length > 0) {
       res.status(400).json({message: "bad request - user already exists"})
     } else {
-      const sql_insert = "INSERT INTO users (email, password, username) VALUES ($1, $2, $3)"
+      const sql_insert = "INSERT INTO users (email, password, username, admin) VALUES ($1, $2, $3, FALSE)"
       await client.query({
         text: sql_insert,
         values: [email, password, username]

@@ -1,5 +1,6 @@
 <template>
   <div v-if="articles !== []" id="main">
+
     <div v-for="i in [articles.find(a => a.id === parseInt(this.id))]" v-if="i !== undefined" id="article" class="card  " style="width: 75%; margin-left: 12.5%; min-height: 75%">
 
         <h3 class="card-header text-center" v-if="!editingArticle.ver">{{ i.title }}</h3>
@@ -11,6 +12,7 @@
         <div class="text-center">
           <input class="card-title " v-if="editingArticle.ver" v-model="editingArticle.title">
           <br v-if="editingArticle.ver">
+
         <h4 class="card-subtitle mb-2 text-muted" v-if="!editingArticle.ver">{{i.chrono}} - {{i.game}}</h4>
           <input v-else class="card-subtitle mb-2 text-muted" v-model="editingArticle.chrono">
           -
@@ -41,6 +43,7 @@
       <div class="buttonlist text-center card-footer" v-if="editingArticle.ver">
         <button type="button" v-on:click="sendEditArticle"  style="width: 20%;" class="btn btn-success">Valider</button>
         <button type="button" v-on:click="abortEditArticle" style="width: 20%;"  class="btn btn-danger">Annuler</button>
+
       </div>
     </div>
 
@@ -126,6 +129,7 @@ module.exports = {
 body {
   overflow: hidden; /* Hide scrollbars */
 }
+
 main{
   margin-right: 50%;
 
