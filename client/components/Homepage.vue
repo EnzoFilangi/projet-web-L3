@@ -1,75 +1,76 @@
 <template>
     <div v-if="done && user.id" class="no-overflow">
-        <h2>Articles les plus récents </h2>
-        <hr>
-        <!-- Propositions de tri -->
-        <div>
-            <p style="display: inline">Trier par :</p>
-            <select v-model="order_by" >
-                <option value="date" selected>Date</option>
-                <option value="game">Jeu</option>
-                <option value="user">Utilisateur</option>
-            </select>
-            <div v-if="order_by === 'game' || order_by === 'user'" style="display: inline; position: relative">
-                <input type="text" v-model="selection_criteria" @keydown.tab.prevent="autocomplete(0)" @input="autocompleteTimeOut">
-                <ul class="autocomplete" v-if="autocomplete_possibilities.length > 0">
-                    <li v-for="(auto, i) in autocomplete_possibilities" @click="autocomplete(i)">
-                        <td v-if="order_by === 'game'">{{auto.display_name}}</td>
-                        <td v-else-if="order_by === 'user'">{{auto.username}}</td>
-                    </li>
-                </ul>
-            </div>
-            <button @click="refreshArticles()" class="btn btn-secondary btn-sm">Rechercher</button>
-        </div>
-        <hr>
-
-        <!-- Affichage des articles -->
-        <div class="card-deck">
-            <article v-for="article in articles" :key="article.id" class="card" v-on:click="navigateArticle(article.id)">
-                <img :src="article.cover" alt="cover image" class="image" v-if=article.cover>
-                <span class="card-img-top" v-else></span>
-                <div class="card-body">
-                    <h2 class="card-title">{{article.title}} by {{article.owner}}</h2>
-                    <h4 class="text-muted">{{article.chrono}} - {{article.game}}</h4>
-                    <pre class="card-text p">{{article.content}}</pre>
+        <div class="centered" style="max-width: 80%">
+            <h2>{{this.title}}</h2>
+            <hr>
+            <!-- Propositions de tri -->
+            <div>
+                <p style="display: inline">Trier par :</p>
+                <select v-model="order_by" >
+                    <option value="date" selected>Date</option>
+                    <option value="game">Jeu</option>
+                    <option value="user">Utilisateur</option>
+                </select>
+                <div v-if="order_by === 'game' || order_by === 'user'" style="display: inline; position: relative">
+                    <input type="text" v-model="selection_criteria" @keydown.tab.prevent="autocomplete(0)" @input="autocompleteTimeOut">
+                    <ul class="autocomplete" v-if="autocomplete_possibilities.length > 0">
+                        <li v-for="(auto, i) in autocomplete_possibilities" @click="autocomplete(i)">
+                            <td v-if="order_by === 'game'">{{auto.display_name}}</td>
+                            <td v-else-if="order_by === 'user'">{{auto.username}}</td>
+                        </li>
+                    </ul>
                 </div>
-            </article>
-        </div>
-        <h4 v-if="articles.length === 0"> Pas d'article trouvé !</h4>
+                <button @click="refreshArticles()" class="btn btn-secondary btn-sm">Rechercher</button>
+            </div>
+            <hr>
 
-        <!-- Modal d'ajout d'article -->
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addArticleModal" data-whatever="@mdo">Ajouter une nouvelle run</button>
-
-        <div class="modal fade" id="addArticleModal" tabindex="-1" role="dialog" aria-labelledby="addArticleModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2 class="modal-title" id="addArticleModalLabel">Ajouter une nouvelle run</h2>
-                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                      </button>
+            <!-- Affichage des articles -->
+            <div class="card-deck">
+                <article v-for="article in articles" :key="article.id" class="card" v-on:click="navigateArticle(article.id)">
+                    <img :src="article.cover" alt="cover image" class="image" v-if=article.cover>
+                    <span class="card-img-top" v-else></span>
+                    <div class="card-body">
+                        <h2 class="card-title">{{article.title}} by {{article.owner}}</h2>
+                        <h4 class="text-muted">{{article.chrono}} - {{article.game}}</h4>
+                        <p class="card-text p">{{formatContentPreview(article.content)}}</p>
                     </div>
-                    <div class="modal-body">
-                        <!-- Formulaire d'ajout / corps du modal -->
-                        <form @submit.prevent="addRun">
-                            <input class="h2" v-model="newRun.title" placeholder="Titre" type="text" required class="max_width">
-                            <div class="form-group">
-                                <input v-model="newRun.game" placeholder="Jeu" required type="text">
-                                <small class="text-muted h4">-</small>
-                                <input v-model="newRun.time" placeholder="Temps" required type="text">
-                            </div>
-                            <div class="form-group">
-                                <textarea v-model="newRun.content" required type="text" class="max_width"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <input v-model="newRun.cover" type="url" required placeholder="Lien vers l'image de couverture" class="max_width">
-                            </div>
-                            <div class="form-group">
-                                <input v-model="newRun.video_link" type="url" required placeholder="Lien vers la preuve vidéo"  pattern=".*\.(youtube|twitch)\..*" title="L'URL doit être un lien youtube ou twitch." class="max_width">
-                            </div>
-                            <button class="btn btn-primary" type="submit">Ajouter</button>
-                            <button class="btn btn-danger" type="button" @click="reset()">Tout supprimer</button>
-                        </form>
+                </article>
+            </div>
+
+            <!-- Modal d'ajout d'article -->
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addArticleModal" data-whatever="@mdo">Ajouter une nouvelle run</button>
+
+            <div class="modal fade" id="addArticleModal" tabindex="-1" role="dialog" aria-labelledby="addArticleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="modal-title" id="addArticleModalLabel">Ajouter une nouvelle run</h2>
+                          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Formulaire d'ajout / corps du modal -->
+                            <form @submit.prevent="addRun">
+                                <input class="h2" v-model="newRun.title" placeholder="Titre" type="text" required class="max_width">
+                                <div class="form-group">
+                                    <input v-model="newRun.game" placeholder="Jeu" required type="text">
+                                    <small class="text-muted h4">-</small>
+                                    <input v-model="newRun.time" placeholder="Temps" required type="text">
+                                </div>
+                                <div class="form-group">
+                                    <textarea v-model="newRun.content" required type="text" class="max_width"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <input v-model="newRun.cover" type="url" required placeholder="Lien vers l'image de couverture" class="max_width">
+                                </div>
+                                <div class="form-group">
+                                    <input v-model="newRun.video_link" type="url" required placeholder="Lien vers la preuve vidéo"  pattern=".*\.(youtube)\..*" title="L'URL doit être un lien youtube." class="max_width">
+                                </div>
+                                <button class="btn btn-primary" type="submit">Ajouter</button>
+                                <button class="btn btn-danger" type="button" @click="reset()">Tout supprimer</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -101,6 +102,7 @@
                 autocomplete_possibilities: [],
                 autocomplete_timer: null,
                 articles: [], // Articles à afficher
+                title: "", // Titre de la page, mis à jours lors de la récupération des articles
             }
         },
         async mounted() {
@@ -126,6 +128,10 @@
             async getArticles() {
                 switch (this.order_by) {
                     case 'game':
+                        try {
+                            const game = (await axios.get('/api/search', {params: {orderBy: 'game', searchString: this.selection_criteria}})).data[0].display_name;
+                            this.title = "Articles sur le jeu " + game;
+                        } catch (e) {}
                         return (await axios.get('/api/articles', {
                             params: {
                                 offset: this.offset,
@@ -134,6 +140,7 @@
                             }
                         })).data
                     case 'user':
+                        this.title = "Articles par " + this.selection_criteria;
                         return (await axios.get('/api/articles', {
                             params: {
                                 offset: this.offset,
@@ -142,11 +149,15 @@
                             }
                         })).data
                     default:
+                        this.title = "Articles les plus récents";
                         return (await axios.get('/api/articles', {params: {offset: this.offset}})).data
                 }
             },
             async refreshArticles () {
                 this.articles = await this.getArticles()
+                if (this.articles.length === 0) {
+                    this.title = "Pas d'article trouvé !";
+                }
             },
             reset () {
                 // Réinitialise les champs de l'ajout d'article
@@ -162,12 +173,16 @@
                 }
             },
             navigateArticle (id) {
-                router.replace({
-                  name: 'run', params: {id: id.toString()}
-                })
+                window.location.hash = "#/run/"+id.toString()
             },
             async autocomplete (i) {
                 // Remplace le champ "selection_criteria" d'entrée utilisateur par l'élément choisi dans la liste des suggestion.
+                if (this.timer) {
+                    clearTimeout(this.timer);
+                    this.timer = null;
+                }
+                await this.reloadAutocomplete();
+
                 if(this.order_by === 'game') {
                     this.selection_criteria = this.autocomplete_possibilities[i].name;
                 } else if (this.order_by === 'user') {
@@ -202,6 +217,15 @@
                     this.autocomplete_possibilities = [];
                 }
             },
+            formatContentPreview (content) {
+                content = content.split("\n")[0];
+                const max_char = 150;
+                if (content.length < max_char) {
+                    return content
+                } else {
+                    return content.slice(0, max_char) + "...";
+                }
+            }
         },
         computed: {
             search_placeholder () {
@@ -214,6 +238,11 @@
 <style scoped>
     .no-overflow {
         overflow-x: hidden
+    }
+
+    .centered {
+        margin: 0 auto;
+        text-align: center;
     }
 
     article {
