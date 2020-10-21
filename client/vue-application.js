@@ -78,11 +78,41 @@ var app = new Vue({
       this.user = res.data
     },
     async addRun (newRun,id_user) {
+      try {
+      var video_embed = newRun.video_link.replace('watch?v=', '');
+      video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
+      const res = await axios.post('/api/addrun', {id_user: id_user, title_run: newRun.title,game: newRun.game, content_text: newRun.content ,chrono: newRun.time,cover:newRun.cover , run_link:video_embed })
+      } catch (e) { //Gestion des erreurs de l'API
+        if (e.response.status === 400) {
+          if (e.response.data.message.includes("bad request - request must content an id")) {
+            alert("merci de fournir un id d'autentification.")
+          } else if (e.response.data.message.includes("bad request - invalid user")) {
+            alert("merci de fournir un id d'autentification valide .")
+          }
+        }
+      }
 
-      const res = await axios.post('/api/addrun', {id_user: id_user, title_run: newRun.title,game: newRun.game, content_text: newRun.content ,chrono: newRun.time,cover:newRun.cover , run_link:newRun.video_link })
+    },async updateRun (newRun,id_user,id) {
+      try {
+      var video_embed =newRun.run_link.split('/embed').join('')
+      video_embed = video_embed.replace('watch?v=', '');
+      video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
+
+      const res = await axios.patch('/api/runmodif', {id_user: id_user, title_run: newRun.title,game: newRun.game, content_text: newRun.content ,chrono: newRun.chrono,cover:newRun.cover , run_link:video_embed,id_article:id })
       this.test = res.data
+      }
+      catch (e) { //Gestion des erreurs de l'API
+        if (e.response.status === 400) {
+          if (e.response.data.message.includes("bad request - request must content an id")) {
+            alert("merci de fournir un id d'autentification.")
+          } else if (e.response.data.message.includes("bad request - invalid request")) {
+            alert("merci de fournir un id d'autentification valide .")
+          }
+        }
+      }
 
 
-    }
+
+    },
   }
 })

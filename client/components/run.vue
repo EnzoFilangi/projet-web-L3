@@ -1,9 +1,34 @@
 <template>
   <div v-if="articles !== []" id="main">
-    <div v-for="i in [articles.find(a => a.id === parseInt(this.id))]" v-if="i !== undefined" id="article">
-      <h2 >{{i.title}} </h2>
-      <h4 >{{i.chrono}} - {{i.game}}</h4>
+    <div v-for="i in [articles.find(a => a.id === parseInt(this.id))]" v-if="i !== undefined" id="article" class="card  " style="width: 90%; margin-left: 5%; min-height: 75%">
+      <div class="card-body">
+        <div class="text-center">
+          <h3 class="card-title" v-if="!editingArticle.ver">{{ i.title }}</h3>
+          <input v-else class="card-title" v-model="editingArticle.title">
+
+        <h4 class="card-subtitle mb-2 text-muted" v-if="!editingArticle.ver">{{i.chrono}} - {{i.game}}</h4>
+          <input v-else class="card-subtitle mb-2 text-muted" v-model="editingArticle.chrono">
+          -
+          <input v-if="editingArticle.ver" class="card-subtitle mb-2 text-muted" v-model="editingArticle.game">
+
+        <h5  v-if="!editingArticle.ver" class="card-text"> {{i.content}}</h5>
+          <input v-else class="card-text" v-model="editingArticle.content">
+
+        </div>
+        <div class="embed-responsive embed-responsive-16by9" >
+          <iframe  height="20%" class="embed-responsive-item"  v-bind:src=i.run_link allowfullscreen></iframe>
+          <input v-if="editingArticle.ver" class="card-subtitle" v-model="editingArticle.run_link">
+
+        </div>
+      </div>
+
+      <button v-if="!editingArticle.ver && (user.admin || user.id == i.owner)" type="button" @click="editArticle(i)" class="btn btn-secondary">Editer</button>
+      <div class="buttonlist" v-if="editingArticle.ver">
+        <button type="button" v-on:click="sendEditArticle" class="btn btn-success">Valider</button>
+        <button type="button" v-on:click="abortEditArticle" class="btn btn-danger">Annuler</button>
+      </div>
     </div>
+
   </div>
 </template>
 
@@ -17,15 +42,20 @@ module.exports = {
         id: null,
         email: null,
         username: null,
+        admin: null,
       },
       done: false,
-      offset: 0,
-      order_by: null,
-      selection_criteria: null,
       articles: [],
-      article: [],
-
-
+      editingArticle: {
+        ver: false,
+        run_link: '',
+        cover: '',
+        title: '',
+        game: '',
+        chrono: '',
+        content: '',
+        owner: '',
+      }
     }
   },
   async mounted() {
@@ -35,19 +65,40 @@ module.exports = {
       this.login()
     }
     this.articles = await this.getArticles()
+
     this.done = true
   },
   methods: {
     login() {
       window.location.hash = "#/login"
     },async getUser () {
-      const res = await axios.get('/api/me')
-      this.user = res.data
+        const res = await axios.get('/api/me')
+        this.user = res.data
     },async getArticles () {
+        return result = (await axios.get('/api/articles')).data
+    },editArticle(article) {
+      this.editingArticle.ver= true;
+      this.editingArticle.run_link = article.run_link
+      this.editingArticle.cover = article.cover
+      this.editingArticle.title = article.title
+      this.editingArticle.game = article.game
+      this.editingArticle.chrono = article.chrono
+      this.editingArticle.content = article.content
+    },sendEditArticle() {
+      this.$emit('update-run', this.editingArticle,this.user.id, this.id)
+      window.location.reload()
 
-      const result = await axios.get('/api/articles', {offset: this.offset})
-      return result.data
-
+    },
+    abortEditArticle() {
+      this.editingArticle = {
+        ver: false,
+        run_link: '',
+        cover: '',
+        title: '',
+        game: '',
+        chrono: '',
+        content: '',
+      }
     },
 
   }
@@ -55,5 +106,17 @@ module.exports = {
 </script>
 
 <style scoped>
+
+body {
+  overflow: hidden; /* Hide scrollbars */
+}
+iframe{
+  margin-left: 30%;
+
+}
+main{
+  margin-right: 50%;
+
+}
 
 </style>
