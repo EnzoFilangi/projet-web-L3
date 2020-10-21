@@ -77,11 +77,12 @@ var app = new Vue({
       const res = await axios.get('/api/me')
       this.user = res.data
     },
-    async addRun (newRun, id_user) {
+    async addRun (newRun,id_user) {
       try {
-        var video_embed = newRun.video_link.replace('watch?v=', '');
+        var video_embed =newRun.run_link.split('/embed').join('');
+        video_embed = video_embed.replace('watch?v=', '');
         video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
-        const res = await axios.post('/api/addrun', {id_user: id_user, title_run: newRun.title, game: newRun.game, content_text: newRun.content, chrono: newRun.time, cover:newRun.cover, run_link:video_embed})
+      const res = await axios.post('/api/addrun', {id_user: id_user, title_run: newRun.title,game: newRun.game, content_text: newRun.content ,chrono: newRun.time,cover:newRun.cover , run_link:video_embed })
       } catch (e) { //Gestion des erreurs de l'API
         if (e.response.status === 400) {
           if (e.response.data.message.includes("bad request - request must content an id")) {
@@ -92,8 +93,7 @@ var app = new Vue({
         }
       }
 
-    },
-    async updateRun (newRun,id_user,id) {
+    },async updateRun (newRun,id_user,id) {
       try {
       var video_embed =newRun.run_link.split('/embed').join('')
       video_embed = video_embed.replace('watch?v=', '');
@@ -111,6 +111,9 @@ var app = new Vue({
           }
         }
       }
+
+
+
     },
   }
 })
