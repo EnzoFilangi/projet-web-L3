@@ -12,18 +12,17 @@
             </select>
             <div v-if="order_by === 'game' || order_by === 'user'" style="display: inline; position: relative">
                 <input type="text" v-model="selection_criteria" @keydown.tab.prevent="autocomplete(0)" @input="autocompleteTimeOut">
-                <table class="autocomplete">
-                    <tbody>
-                    <tr v-for="(auto, i) in autocomplete_possibilities" @click="autocomplete(i)">
+                <ul class="autocomplete" v-if="autocomplete_possibilities.length > 0">
+                    <li v-for="(auto, i) in autocomplete_possibilities" @click="autocomplete(i)">
                         <td v-if="order_by === 'game'">{{auto.display_name}}</td>
                         <td v-else-if="order_by === 'user'">{{auto.username}}</td>
-                    </tr>
-                    </tbody>
-                </table>
+                    </li>
+                </ul>
             </div>
             <button @click="refreshArticles()" class="btn btn-secondary btn-sm">Rechercher</button>
         </div>
         <hr>
+
         <!-- Affichage des articles -->
         <div class="card-deck">
             <article v-for="article in articles" :key="article.id" class="card" v-on:click="navigateArticle(article.id)">
@@ -87,21 +86,21 @@
                     email: null,
                     username: null,
                 },
-              newRun: {
-                video_link: '',
-                cover: '',
-                title: '',
-                game: '',
-                time: '',
-                content: '',
-              },
-                done: false,
-                offset: 0,
-                order_by: null,
-                selection_criteria: null,
+                newRun: {
+                    video_link: '',
+                    cover: '',
+                    title: '',
+                    game: '',
+                    time: '',
+                    content: '',
+                },
+                done: false, // Permet au site de savoir quand les données ont fini d'être récupérées au chargement de la page
+                offset: 0, // Permet de savoir le nombre d'articles déjà lus
+                order_by: null, // Sélection du type de recherche
+                selection_criteria: null, // Critère de recherche
                 autocomplete_possibilities: [],
                 autocomplete_timer: null,
-                articles: [],
+                articles: [], // Articles à afficher
             }
         },
         async mounted() {
@@ -150,6 +149,7 @@
                 this.articles = await this.getArticles()
             },
             reset () {
+                // Réinitialise les champs de l'ajout d'article
                 if(confirm("Voulez-vous vraiment supprimer ?")){
                     this.newRun = {
                         video_link: '',
@@ -167,16 +167,20 @@
                 })
             },
             async autocomplete (i) {
+                // Remplace le champ "selection_criteria" d'entrée utilisateur par l'élément choisi dans la liste des suggestion.
                 if(this.order_by === 'game') {
                     this.selection_criteria = this.autocomplete_possibilities[i].name;
                 } else if (this.order_by === 'user') {
                     this.selection_criteria = this.autocomplete_possibilities[i].username;
                 }
+                // On recharge les articles avec le nouveau critère de sélection
                 await this.refreshArticles();
+                // On réinitialise les critères de recherche une fois celle-ci effectuée
                 this.selection_criteria = '';
                 this.autocomplete_possibilities = [];
             },
             autocompleteTimeOut() {
+                // Pour éviter les appels excessifs à l'API on ne va chercher les résultats que si l'utilisateur n'a rien tapé durant les 300 dernières millisecondes
                 if (this.timer) {
                     clearTimeout(this.timer);
                     this.timer = null;
@@ -186,10 +190,12 @@
                 }, 300);
             },
             async reloadAutocomplete () {
-                if (this.selection_criteria.length > 1){
-                    this.autocomplete_possibilities = (await axios.get('/api/game', {
+                // Recharge les résultats d'autocomplétion depuis le serveur
+                if (this.selection_criteria.length > 1){ // L'utilisateur doit avoir entré au moins 2 caractères pour que la recherche s'effectue
+                    this.autocomplete_possibilities = (await axios.get('/api/search', {
                         params: {
-                            gameString: this.selection_criteria
+                            orderBy: this.order_by,
+                            searchString: this.selection_criteria
                         }
                     })).data
                 } else {
@@ -243,7 +249,14 @@
         top: 2em;
         left: 0;
         z-index: 999999;
-        background: gray;
+        background: rgba(0, 0, 0, 0.25);
         border: 1px solid black;
+        max-height: 10em;
+        overflow: auto;
+        padding-left: 20px;
+    }
+
+    .autocomplete li {
+        padding-left: -10px;
     }
 </style>

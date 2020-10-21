@@ -62,13 +62,26 @@ router.get('/articles', async (req, res) => {
   res.status(200).json(result)
 })
 
-router.get('/game', async (req, res) => {
-  const game = "%" + req.query.gameString.toLowerCase().replace(/[#_%]/g,'').replace(/[\-]/g, ' ') + "%";
-  const result = (await client.query({
-    text: "SELECT name, display_name FROM games WHERE name LIKE $1",
-    values: [game]
-  })).rows;
-  res.status(200).json(result);
+router.get('/search', async (req, res) => {
+  const order_by = req.query.orderBy;
+  const regex_void = /[#_%.]/g;
+  const regex_space = /[\-]/g;
+  if (order_by === 'game') {
+    const game = "%" + req.query.searchString.toLowerCase().replace(regex_void,'').replace(regex_space, ' ') + "%";
+    const result = (await client.query({
+      text: "SELECT name, display_name FROM games WHERE name LIKE $1",
+      values: [game]
+    })).rows;
+    res.status(200).json(result);
+  } else {
+    const user = "%" + req.query.searchString + "%";
+    const result = (await client.query({
+      text: "SELECT username FROM users WHERE username LIKE $1",
+      values: [user]
+    })).rows;
+    res.status(200).json(result);
+  }
+
 })
 
 
