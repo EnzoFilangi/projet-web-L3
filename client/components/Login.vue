@@ -3,7 +3,7 @@
     <h2>Connexion</h2>
     <form @submit.prevent="login">
       <div class="form-group">
-        <input class="centered-text" type="email" v-model="email" placeholder="e-mail" required>
+        <input class="centered-text" type="email" v-model="email" placeholder="Email" required>
         <input class="centered-text" type="password" v-model="password" placeholder="Mot de passe" required>
       </div>
       <button class="btn btn-primary take-width" type="submit">Se connecter</button>

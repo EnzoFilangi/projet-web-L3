@@ -20,12 +20,84 @@ router.use((req, res, next) => {
   next()
 })
 
+/*
+ * Cette route permet de récupérer une liste d'articles
+ * Le body doit contenir d'éventuels paramètres de recherche, ainsi que l'offset de lecture des articles
+ */
+router.get('/articles', async (req, res) => {
+  let offset = 0;
+  try {
+
+    offset = req.query.offset;
+  } catch (e) {} //Si aucun offset n'est spécifié dans la requête, on va générer une erreur que l'on ignore
+  let result;
+  let sql = "SELECT id, " +
+            "(SELECT username FROM users WHERE id = articles.owner) as owner," +
+            " title, " +
+            "(SELECT display_name FROM games WHERE id = articles.game) as game," +
+            " content, chrono, cover, run_link FROM articles "
+  switch (req.query.order_by) {
+    case 'game':
+      const game = req.query.game.toLowerCase().replace(/[#_%]/g,'').replace(/[\-]/g, ' ');
+      sql += "WHERE game = (SELECT id FROM games WHERE name = $1 LIMIT 1) ORDER by id DESC LIMIT 20 OFFSET $2";
+
+      result = (await client.query({
+        text: sql,
+        values: [game, offset]
+      })).rows
+      break;
+    case 'user':
+
+      const user = req.query.user;
+      sql += "WHERE owner = (SELECT id FROM users WHERE username = $1 LIMIT 1) ORDER by id DESC LIMIT 20 OFFSET $2";
+
+      result = (await client.query({
+        text: sql,
+        values: [user, offset]
+      })).rows
+      break;
+    default:
+
+      sql += "ORDER by id DESC LIMIT 20 OFFSET $1";
+
+      result = (await client.query({
+        text: sql,
+        values: [offset]
+      })).rows
+  }
+  res.status(200).json(result)
+})
+
+
+router.get('/search', async (req, res) => {
+  const order_by = req.query.orderBy;
+  const regex_void = /[#_%.]/g;
+  const regex_space = /[\-]/g;
+  if (order_by === 'game') {
+    const game = "%" + req.query.searchString.toLowerCase().replace(regex_void,'').replace(regex_space, ' ') + "%";
+    const result = (await client.query({
+      text: "SELECT name, display_name FROM games WHERE name LIKE $1",
+      values: [game]
+    })).rows;
+    res.status(200).json(result);
+  } else {
+    const user = "%" + req.query.searchString + "%";
+    const result = (await client.query({
+      text: "SELECT username FROM users WHERE username LIKE $1",
+      values: [user]
+    })).rows;
+    res.status(200).json(result);
+  }
+
+})
+
 
 /*
  * Cette route permet d'ajouter un nouvel article/ run
  * Le body doit contenir l'id de l'utilisateur, le titre de la run, le jeu, le contenue, le temps, une image de couverture et le liens vers la video
  */
 router.post('/addrun', async (req, res) => {
+  //on recupere les variables
   const id_user = req.body.id_user;
   const title_run = req.body.title_run;
   const game = req.body.game;
@@ -33,10 +105,14 @@ router.post('/addrun', async (req, res) => {
   const chrono = req.body.chrono;
   const cover = req.body.cover;
   const run_link = req.body.run_link
+
+
+  //on verifie la presence de la variable essentiel
   if(!id_user){
     res.status(400).json({message: "bad request - request must content an id"});
   }
   else{
+
     const sql = "SELECT * FROM users WHERE id=$1";
     const result = (await client.query({
       text: sql,
@@ -48,7 +124,7 @@ router.post('/addrun', async (req, res) => {
       const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2,$3, $4,$5, $6,$7)"
       await client.query({
         text: sql_insert,
-        values: [id_user, title_run,game, content_text,chrono,cover,run_link]
+        values: [id_user, title_run, game, content_text, chrono, cover, run_link]
       });
 
       res.status(200).json({message: "ok"})
@@ -66,6 +142,7 @@ router.post('/addrun', async (req, res) => {
 
 router.patch('/runmodif', async (req, res) => {
 
+  //on recupere les variables
 
   const id_user = req.body.id_user;
   let title_run = req.body.title_run;
@@ -75,8 +152,11 @@ router.patch('/runmodif', async (req, res) => {
   let cover = req.body.cover;
   let run_link = req.body.run_link
   const id_article = req.body.id_article
+
+  //on verifie la presence de la variable essentiel
+
   if(!id_user){
-    res.status(400).json({message: "bad request - request must content an id"});
+    res.status(400).json({message: "bad request - request must contain an id"});
   }
   else{
 
@@ -91,10 +171,9 @@ router.patch('/runmodif', async (req, res) => {
       text: sql2,
       values: [id_article]
     })).rows
+    if (result.length === 1 && result2.length === 1 && (result[0].admin || parseInt(result2[0].owner) === parseInt(id_user))) {
+      //si aucune nouvelle valeur est fournie on garde l'ancienne
 
-  console.log("1")
-    if (result.length === 1 && result2.length === 1 &&(result[0].admin || result2[0].owner == id_user)) {
-      console.log("12")
       if(!title_run){
         title_run=result2[0].title
       }if(!game){
@@ -109,13 +188,12 @@ router.patch('/runmodif', async (req, res) => {
         run_link=result2[0].run_link
       }
 
-      console.log("13")
-      const sql_update = "UPDATE articles set title = $1, game  = $2, content = $3, chrono = $4, cover = $5, run_link = $6  WHERE  id=$7 "
+      const sql_update = "UPDATE articles set title = $1, game  = (SELECT id FROM games WHERE display_name = $2), content = $3, chrono = $4, cover = $5, run_link = $6  WHERE  id=$7 "
       await client.query({
         text: sql_update,
         values: [ title_run,game, content_text,chrono,cover,run_link,id_article ]
       });
-      console.log("14")
+
       res.status(200).json({message: "ok"});
     } else {
       res.status(400).json({message: "bad request -  invalid request"});
@@ -147,7 +225,7 @@ router.post('/register', async (req, res) => {
     if (query.rows.length > 0) {
       res.status(400).json({message: "bad request - user already exists"})
     } else {
-      const sql_insert = "INSERT INTO users (email, password, username) VALUES ($1, $2, $3)"
+      const sql_insert = "INSERT INTO users (email, password, username, admin) VALUES ($1, $2, $3, FALSE)"
       await client.query({
         text: sql_insert,
         values: [email, password, username]
@@ -192,7 +270,7 @@ router.post('/login', async (req, res) => {
  */
 router.get('/me', async (req, res) => {
   if(req.session.userId){
-    const sql = "SELECT id, email, username FROM users WHERE id=$1"
+    const sql = "SELECT id, email, username,admin FROM users WHERE id=$1"
     const result = (await client.query({
       text: sql,
       values: [req.session.userId]
