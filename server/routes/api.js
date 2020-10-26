@@ -35,7 +35,7 @@ router.get('/articles', async (req, res) => {
             "(SELECT username FROM users WHERE id = articles.owner) as owner," +
             " title, " +
             "(SELECT display_name FROM games WHERE id = articles.game) as game," +
-            " content, chrono, cover, run_link FROM articles "
+            " content, chrono, cover FROM articles "
   switch (req.query.order_by) {
     case 'game':
       const game = req.query.game.toLowerCase().replace(/[#_%]/g,'').replace(/[\-]/g, ' ');
@@ -188,7 +188,7 @@ router.patch('/runmodif', async (req, res) => {
         run_link=result2[0].run_link
       }
 
-      const sql_update = "UPDATE articles set title = $1, game  = (SELECT id FROM games WHERE display_name = $2), content = $3, chrono = $4, cover = $5, run_link = $6  WHERE  id=$7 "
+      const sql_update = "UPDATE articles set title = $1, game  = $2, content = $3, chrono = $4, cover = $5, run_link = $6  WHERE  id=$7 "
       await client.query({
         text: sql_update,
         values: [ title_run,game, content_text,chrono,cover,run_link,id_article ]

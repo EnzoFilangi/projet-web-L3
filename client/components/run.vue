@@ -95,12 +95,9 @@ module.exports = {
         this.user = res.data
     },async getArticles () {
         return result = (await axios.get('/api/articles')).data
-      console.log(result)
     },editArticle(article) {
       this.editingArticle.ver= true;
       this.editingArticle.run_link = article.run_link
-      console.log(article)
-      console.log(article.run_link)
       this.editingArticle.cover = article.cover
       this.editingArticle.title = article.title
       this.editingArticle.game = article.game
