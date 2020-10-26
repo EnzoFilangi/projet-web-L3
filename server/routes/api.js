@@ -127,37 +127,25 @@ router.get('/searchName', async (req, res) => {
  * Le body doit contenir l'id de l'utilisateur, le titre de la run, le jeu, le contenue, le temps, une image de couverture et le liens vers la video
  */
 router.post('/addrun', async (req, res) => {
-  const id_user = req.body.id_user;
-  const title_run = req.body.title_run;
-  const game = req.body.game;
-  const content_text = req.body.content_text;
-  const chrono = req.body.chrono;
-  const cover = req.body.cover;
-  const run_link = req.body.run_link
-  if(!id_user){
-    res.status(400).json({message: "bad request - request must content an id"});
+  const new_run = req.body;
+  const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2, (SELECT id FROM games WHERE display_name = $3 LIMIT 1), $4, $5, $6, $7)"
+  try {
+    await client.query({
+      text: sql_insert,
+      values: [
+          new_run.id_user,
+          new_run.title_run,
+          new_run.game,
+          new_run.content_text,
+          new_run.chrono,
+          new_run.cover,
+          new_run.run_link
+      ]
+    });
+    res.status(200).json({message: "ok"})
+  } catch (e) {
+    res.status(400).json({message: "bad request"});
   }
-  else{
-    const sql = "SELECT * FROM users WHERE id=$1";
-    const result = (await client.query({
-      text: sql,
-      values: [id_user]
-    })).rows
-
-    if (result.length === 1) {
-
-        const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2,$3, $4,$5, $6,$7)"
-      await client.query({
-        text: sql_insert,
-        values: [id_user, title_run, game, content_text, chrono, cover, run_link]
-      });
-
-      res.status(200).json({message: "ok"})
-    } else {
-      res.status(400).json({message: "bad request - invalid user"});
-    }
-  }
-
 })
 
 /**
