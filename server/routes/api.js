@@ -345,5 +345,41 @@ router.delete('/user', async (req, res) => {
   }
 })
 
+router.patch('/user_mdp', async (req, res) => {
+  const password = req.body.params.password
+  let new_password = req.body.params.new_password
+
+  if(req.body.params.username){
+    const sql2 = "SELECT  id,admin,password FROM users WHERE username=$1"
+    const result = (await client.query({
+      text: sql2,
+      values: [req.body.params.username]
+    })).rows
+    if(result[0]){
+      if (await bcrypt.compare(password, result[0].password)) {
+
+        new_password= await bcrypt.hash(new_password, 10);
+
+        const sql_update = "UPDATE users set password = $1 WHERE  id=$2 "
+        await client.query({
+          text: sql_update,
+          values: [new_password, result[0].id ]
+        });
+
+        res.status(200).json({message: "ok"});
+
+      } else {
+        res.status(400).json({message: "bad request - invalid password"});
+      }
+
+
+    } else {
+      res.status(401).json({message: "include a valid username"});
+    }
+  } else {
+    res.status(401).json({message: "include an username"});
+  }
+})
+
 
 module.exports = router

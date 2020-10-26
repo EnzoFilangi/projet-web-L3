@@ -138,5 +138,27 @@ var app = new Vue({
 
 
     },
+    async editUser (username,password,newpassword) {
+      try {
+        const res = await axios.patch('/api/user_mdp', { params: {
+            username: username,
+            password: password,
+            new_password: newpassword,
+          }})
+        this.test = res.data
+        console.log(res.data)
+        window.location.hash = "#/"
+      }
+      catch (e) { //Gestion des erreurs de l'API
+        if (e.response.data.message.includes("bad request - invalid password")) {
+          alert("mauvais mot de passe.")
+        } else {
+          alert("une erreur c'est produite ")        }
+
+      }
+
+
+
+    },
   }
 })

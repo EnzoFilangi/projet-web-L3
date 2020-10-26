@@ -22,8 +22,13 @@
             <div class="modal-body">
               <!-- Formulaire d'ajout / corps du modal -->
               <form @submit.prevent="editUser">
+                  <input v-model="Newpassword1" placeholder="nouveau mot de passe" required type="password">
+                  <input v-model="Newpassword2" placeholder="confirmez le mot de passe" required type="password">
 
-                <button class="btn btn-primary" type="submit">modifier</button>
+
+                  <input v-model="password" placeholder="ancien mot de passe" required type="password">
+
+                  <button class="btn btn-primary" type="submit">modifier</button>
               </form>
             </div>
           </div>
@@ -84,6 +89,8 @@
             return {
                 username: this.$route.params.username,
                 password: null,
+                Newpassword2: null,
+                Newpassword1: null,
                 user: {
                     id: null,
                     email: null,
@@ -145,8 +152,13 @@
                     }
                 })
                 return  res.data
-            }, editUser(username) {
+            }, editUser() {
+if(this.Newpassword2 !=this.Newpassword1){
+    alert("les nouveau mots de passe sont diférent")
+}else{
+    this.$emit('edit-user', this.username,this.password,this.Newpassword1)
 
+}
 
 
 
