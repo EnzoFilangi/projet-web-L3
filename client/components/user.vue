@@ -4,40 +4,47 @@
     <div v-if="this.done">
         <h1 style="text-align: center;">
             {{ this.username }}
-          <div v-if="this.user_page.admin">
-            [admin]
-          </div>
+            <div v-if="this.user_page.admin">
+                [admin]
+            </div>
         </h1>
 
-      <button v-if="this.username ==this.user.username" type="button" class="btn btn-secondary" data-toggle="modal" data-target="#editUser" data-whatever="@mdo">Editer</button>
-      <div class="modal fade" id="editUser" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h2 class="modal-title" id="addArticleModalLabel">Ajouter une nouvelle run</h2>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
+        <button v-if="this.username ==this.user.username" type="button" class="btn btn-secondary" data-toggle="modal"
+                data-target="#editUser" data-whatever="@mdo">changer de mot de passe
+        </button>
+        <div class="modal fade" id="editUser" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="addArticleModalLabel">Ajouter une nouvelle run</h2>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Formulaire  corps du modal -->
+                        <form @submit.prevent="editUser">
+                            <input v-model="Newpassword1" placeholder="nouveau mot de passe" required type="password">
+                            <input v-model="Newpassword2" placeholder="confirmez le mot de passe" required
+                                   type="password">
+
+
+                            <input v-model="password" placeholder="ancien mot de passe" required type="password">
+
+                            <button class="btn btn-primary" type="submit">modifier</button>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-              <!-- Formulaire d'ajout / corps du modal -->
-              <form @submit.prevent="editUser">
-                  <input v-model="Newpassword1" placeholder="nouveau mot de passe" required type="password">
-                  <input v-model="Newpassword2" placeholder="confirmez le mot de passe" required type="password">
-
-
-                  <input v-model="password" placeholder="ancien mot de passe" required type="password">
-
-                  <button class="btn btn-primary" type="submit">modifier</button>
-              </form>
-            </div>
-          </div>
         </div>
-      </div>
 
 
-        <button v-if="this.username ==this.user.username" type="button" class="btn btn-danger" data-toggle="modal" data-target="#delUser" data-whatever="@mdo">suprimer utilisateur</button>
-        <div class="modal fade" id="delUser" tabindex="-1" role="dialog" aria-labelledby="delUserModalLabel" aria-hidden="true">
+        <button v-if="this.username ==this.user.username" type="button" class="btn btn-danger" data-toggle="modal"
+                data-target="#delUser" data-whatever="@mdo">suprimer utilisateur
+        </button>
+        <div class="modal fade" id="delUser" tabindex="-1" role="dialog" aria-labelledby="delUserModalLabel"
+             aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -56,7 +63,7 @@
                 </div>
             </div>
         </div>
-      <div>
+        <div>
             <h1>
                 voici les run de {{ this.username }}
             </h1>
@@ -64,7 +71,7 @@
                 <article v-for="article in articles" :key="article.id" class="card" v-bind:username="this.username"
                          v-on:click="navigateArticle(article.id)">
                     <div v-if="username==article.owner">
-                        <img :src="article.cover" alt="cover image" class="image" v-if=article.cover>
+                        <img :src="article.cover" alt="cover image" class="card-img-top" v-if=article.cover>
                         <span class="card-img-top" v-else></span>
                         <div class="card-body">
                             <h2 class="card-title">{{article.title}} </h2>
@@ -151,27 +158,26 @@
                         username: this.username,
                     }
                 })
-                return  res.data
+                return res.data
             }, editUser() {
-if(this.Newpassword2 !=this.Newpassword1){
-    alert("les nouveau mots de passe sont diférent")
-}else{
-    this.$emit('edit-user', this.username,this.password,this.Newpassword1)
+                if (this.Newpassword2 != this.Newpassword1) {
+                    alert("les nouveau mots de passe sont diférent")
+                } else {
+                    this.$emit('edit-user', this.username, this.password, this.Newpassword1)
 
-}
+                }
 
 
-
-          },
-          deleteUser(){
+            },
+            deleteUser() {
                 console.log(this.password)
-              var answer = window.confirm("voulez vous vraiment suprimer");
-              if (answer) {
-                  this.$emit('delete-user', this.username,this.password)
-              }
+                var answer = window.confirm("voulez vous vraiment suprimer");
+                if (answer) {
+                    this.$emit('delete-user', this.username, this.password)
+                }
 
-          },
-          async getArticles() {
+            },
+            async getArticles() {
                 return result = (await axios.get('/api/articles')).data
             }, navigateArticle(id) {
                 router.replace({
@@ -198,11 +204,6 @@ if(this.Newpassword2 !=this.Newpassword1){
         min-width: 30em;
         max-width: 60em;
 
-    }
-
-    .image {
-      object-fit: cover;
-        max-height: 25em;
     }
 
     article span {
