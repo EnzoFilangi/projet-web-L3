@@ -8,7 +8,7 @@ const routes = [
   { path: '/', component: Homepage },
   { path: '/register', component: Register },
   { path: '/login', component: Login },
-  { path: '/user', component: user,name: 'user' },
+  { path: '/user/:username', component: user,name: 'user' },
   {path: '/run/:id', component: run, name: 'run'}
 ]
 
@@ -112,6 +112,27 @@ var app = new Vue({
             alert("merci de fournir un id d'autentification valide .")
           }
         }
+      }
+
+
+
+    },
+    async deleteUser (username,password) {
+      try {
+        const res = await axios.delete('/api/user', { params: {
+            username: username,
+            password: password,
+          }})
+        this.test = res.data
+        console.log(res.data)
+        window.location.hash = "#/"
+      }
+      catch (e) { //Gestion des erreurs de l'API
+        if (e.response.data.message.includes("bad request - invalid password")) {
+          alert("mauvais mot de passe.")
+        } else {
+          alert("une erreur c'est produite ")        }
+
       }
 
 

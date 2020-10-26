@@ -35,7 +35,7 @@ router.get('/articles', async (req, res) => {
             "(SELECT username FROM users WHERE id = articles.owner) as owner," +
             " title, " +
             "(SELECT display_name FROM games WHERE id = articles.game) as game," +
-            " content, chrono, cover FROM articles "
+            " content, chrono,run_link, cover FROM articles "
   switch (req.query.order_by) {
     case 'game':
       const game = req.query.game.toLowerCase().replace(/[#_%]/g,'').replace(/[\-]/g, ' ');
@@ -284,5 +284,66 @@ router.get('/me', async (req, res) => {
     res.status(401).json({message: "no user logged in."});
   }
 })
+
+
+/*
+ * Cette route retourne les infos d'un user en fonction de son id
+ */
+router.get('/user', async (req, res) => {
+  if(req.query.username){
+    const sql = "SELECT  id,admin FROM users WHERE username=$1"
+    const result = (await client.query({
+      text: sql,
+      values: [req.query.username]
+    })).rows
+    if(result[0]){
+      res.status(200).json(result[0])
+    } else {
+      res.status(401).json({message: "include a valid username"});
+    }
+  } else {
+    res.status(401).json({message: "include an username"});
+  }
+})
+
+router.delete('/user', async (req, res) => {
+  const password = req.query.password
+
+  if(req.query.username){
+    const sql2 = "SELECT  id,admin,password FROM users WHERE username=$1"
+    const result = (await client.query({
+      text: sql2,
+      values: [req.query.username]
+    })).rows
+    if(result[0]){
+      if (await bcrypt.compare(password, result[0].password)) {
+
+        const sql = "DELETE FROM articles WHERE owner=$1"
+        await client.query({
+          text: sql,
+          values: [result[0].id]
+        })
+
+        const sql3 = "DELETE FROM users WHERE id=$1"
+        await client.query({
+          text: sql3,
+          values: [result[0].id]
+        })
+
+        res.status(200).json({message: "ok"})
+
+      } else {
+        res.status(400).json({message: "bad request - invalid password"});
+      }
+
+
+    } else {
+      res.status(401).json({message: "include a valid username"});
+    }
+  } else {
+    res.status(401).json({message: "include an username"});
+  }
+})
+
 
 module.exports = router
