@@ -268,7 +268,7 @@ router.get('/me', async (req, res) => {
   }
 })
 
-/*
+/**
  * Cette route retourne les infos d'un user en fonction de son id
  */
 router.get('/user', async (req, res) => {
@@ -287,6 +287,10 @@ router.get('/user', async (req, res) => {
     res.status(401).json({message: "include an username"});
   }
 })
+
+/**
+ * Cette route permet de suprimer un utilisateur ansi que tout ces articles
+ */
 
 router.delete('/user', async (req, res) => {
   const password = req.query.password
@@ -326,6 +330,9 @@ router.delete('/user', async (req, res) => {
     res.status(401).json({message: "include an username"});
   }
 })
+/**
+ * Cette route permet de modifier le mot de passe d'un utilisateur
+ */
 
 router.patch('/user_mdp', async (req, res) => {
   const password = req.body.params.password

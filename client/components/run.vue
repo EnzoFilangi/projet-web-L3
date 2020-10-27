@@ -1,5 +1,9 @@
 <template>
+
   <div v-if="done" id="main">
+
+    <!-- on change l'affichage si on est en mode edition-->
+
     <div v-if="editingArticle.ver">
       <div class="card card-style">
         <form @submit.prevent="sendEditArticle">
@@ -43,6 +47,7 @@
             <iframe width="200" height="200" class="embed-responsive-item" v-bind:src="article.run_link" allowfullscreen></iframe>
           </div>
         </div>
+        <!-- le bouton n'est accessible que si l'utilisateur est un admin ou le createur de la page-->
         <button v-if="!editingArticle.ver && (user.admin || user.id === article.owner)" type="button" @click="editArticle()" class="btn btn-secondary">Editer</button>
       </div>
     </div>

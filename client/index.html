@@ -21,13 +21,15 @@
         <div id="app">
           <header>
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <h1 class="navbar-brand">Speed.run</h1>
-                <router-link to='/' class="nav-item nav-link">Accueil</router-link>
+                <h1 class="navbar-brand" ><router-link to='/' style="text-decoration: none; color: black"> Speed.run</router-link> </h1>
                 <router-link to='/create' class="nav-item nav-link">Ajouter un article</router-link>
                 <ul class="navbar-nav ml-auto">
                     <li><router-link to='/register' class="nav-item nav-link" v-if="!user.id && done">S'enregistrer</router-link></li>
                     <li><router-link to='/login' class="nav-item nav-link" v-if="!user.id && done">Se connecter</router-link></li>
-                    <li><p v-if="user.username && done">Bonjour {{user.username}} !</p></li>
+
+                    <li><router-link :to="`/user/${user.username}`"  style="text-decoration: none; color: black" class="stretched-link" v-if="user.username && done">Bonjour {{user.username}} !</router-link></li>
+
+
                 </ul>
             </nav>
           </header>

@@ -84,9 +84,13 @@ var app = new Vue({
     async addRun (newRun, id_user) {
       var video_embed;
       try {
+        // on transforme un simple lien youtube en embed youtube
         video_embed = newRun.video_link.split('/embed').join('');
         video_embed = video_embed.replace('watch?v=', '');
         video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
+
+
+
         await axios.post('/api/addrun', {
           id_user: id_user,
           title_run: newRun.title,

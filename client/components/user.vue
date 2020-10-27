@@ -12,12 +12,15 @@
         <button v-if="this.username ==this.user.username" type="button" class="btn btn-secondary" data-toggle="modal"
                 data-target="#editUser" data-whatever="@mdo">changer de mot de passe
         </button>
+
+        iv class="modal-body">
+        <!-- modal de changement de mot de passe -->
         <div class="modal fade" id="editUser" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel"
              aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2 class="modal-title" id="addArticleModalLabel">Ajouter une nouvelle run</h2>
+                        <h2 class="modal-title" id="addArticleModalLabel">Changer de mot de passe</h2>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -25,12 +28,12 @@
                     <div class="modal-body">
                         <!-- Formulaire  corps du modal -->
                         <form @submit.prevent="editUser">
-                            <input v-model="Newpassword1" placeholder="nouveau mot de passe" required type="password">
-                            <input v-model="Newpassword2" placeholder="confirmez le mot de passe" required
+                            <input v-model="Newpassword1" class="form-control" placeholder="nouveau mot de passe" required type="password">
+
+                            <input v-model="Newpassword2" class="form-control"  placeholder="confirmez le mot de passe" required
                                    type="password">
 
-
-                            <input v-model="password" placeholder="ancien mot de passe" required type="password">
+                            <input v-model="password"  class="form-control"  placeholder="ancien mot de passe" required type="password">
 
                             <button class="btn btn-primary" type="submit">modifier</button>
                         </form>
@@ -43,19 +46,20 @@
         <button v-if="this.username ==this.user.username" type="button" class="btn btn-danger" data-toggle="modal"
                 data-target="#delUser" data-whatever="@mdo">suprimer utilisateur
         </button>
+        <!-- modal pour suprimer l'utilisateur -->
         <div class="modal fade" id="delUser" tabindex="-1" role="dialog" aria-labelledby="delUserModalLabel"
              aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2 class="modal-title" id="delModalLabel">Ajouter une nouvelle run</h2>
+                        <h2 class="modal-title" id="delModalLabel">suprimer l'utilsateur</h2>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
                         <form @submit.prevent="deleteUser">
-                            <input v-model="password" placeholder="mot de passe" required type="password">
+                            <input v-model="password" class="form-control" placeholder="mot de passe" required type="password">
 
                             <button class="btn btn-danger" type="submit">suprimer l'utilisateur</button>
                         </form>
@@ -63,6 +67,7 @@
                 </div>
             </div>
         </div>
+
         <div>
             <h1>
                 voici les run de {{ this.username }}
@@ -109,26 +114,9 @@
                     id: null,
                     admin: null,
                 },
-                newRun: {
-                    video_link: '',
-                    cover: '',
-                    title: '',
-                    game: '',
-                    time: '',
-                    content: '',
-                },
                 done: false,
                 articles: [],
-                editingArticle: {
-                    ver: false,
-                    run_link: '',
-                    cover: '',
-                    title: '',
-                    game: '',
-                    chrono: '',
-                    content: '',
-                    owner: '',
-                }
+
             }
         },
         async mounted() {
@@ -161,7 +149,7 @@
                 return res.data
             }, editUser() {
                 if (this.Newpassword2 != this.Newpassword1) {
-                    alert("les nouveau mots de passe sont diférent")
+                    alert("les deux mots de passe sont diférent")
                 } else {
                     this.$emit('edit-user', this.username, this.password, this.Newpassword1)
 
@@ -216,9 +204,5 @@
         min-height: 20em;
     }
 
-
-    .autocomplete li {
-        padding-left: -10px;
-    }
 
 </style>
