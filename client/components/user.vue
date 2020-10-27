@@ -13,7 +13,6 @@
                 data-target="#editUser" data-whatever="@mdo">changer de mot de passe
         </button>
 
-        iv class="modal-body">
         <!-- modal de changement de mot de passe -->
         <div class="modal fade" id="editUser" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel"
              aria-hidden="true">
