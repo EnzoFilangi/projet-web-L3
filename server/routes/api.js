@@ -31,10 +31,10 @@ router.get('/articles', async (req, res) => {
   } catch (e) {} //Si aucun offset n'est spécifié dans la requête, on va générer une erreur que l'on ignore
   let result;
   let sql = "SELECT id, " +
-            "(SELECT username FROM users WHERE id = articles.owner) as owner," +
-            " title, " +
-            "(SELECT display_name FROM games WHERE id = articles.game) as game," +
-            " content, chrono, run_link, cover FROM articles "
+            "(SELECT username FROM users WHERE id = articles.owner) as owner, " +
+            "title, " +
+            "(SELECT display_name FROM games WHERE id = articles.game) as game, " +
+            "content, chrono, run_link, cover FROM articles "
   switch (req.query.order_by) {
     case 'game':
       const game = sanitizeGameName(req.query.game);
@@ -60,6 +60,25 @@ router.get('/articles', async (req, res) => {
       })).rows
   }
   res.status(200).json(result)
+})
+
+/**
+ * Cette route permet de récupérer un article particulier en fonction de son id
+ * Doit recevoir l'id en paramètre
+ */
+router.get('/articles/byid', async (req, res) => {
+    const id = req.query.id;
+    const sql = "SELECT id, " +
+        "(SELECT username FROM users WHERE id = articles.owner) as owner, " +
+        "title, " +
+        "(SELECT display_name FROM games WHERE id = articles.game) as game, " +
+        "content, chrono, run_link, cover " +
+        "FROM articles WHERE id = $1";
+    const result = (await client.query({
+        text: sql,
+        values: [id]
+    })).rows;
+    res.status(200).json(result);
 })
 
 /**
@@ -152,56 +171,17 @@ router.post('/addrun', async (req, res) => {
  * Le body doit contenir l'id de l'utilisateur, le titre de la run, le jeu, le contenue, le temps, une image de couverture et le liens vers la video
  */
 router.patch('/runmodif', async (req, res) => {
-  const id_user = req.body.id_user;
-  let title_run = req.body.title_run;
-  let game = req.body.game;
-  let content_text = req.body.content_text;
-  let chrono = req.body.chrono;
-  let cover = req.body.cover;
-  let run_link = req.body.run_link
-  const id_article = req.body.id_article
-  //on verifie la presence de la variable essentiel
-  if(!id_user){
+  //on verifie la presence de la variable essentielle
+  if (!req.body.id_user) {
     res.status(400).json({message: "bad request - request must contain an id"});
   }
-  else{
-
-    const sql = "SELECT * FROM users WHERE id=$1";
-    const result = (await client.query({
-      text: sql,
-      values: [id_user]
-    })).rows
-
-    const sql2 = "SELECT * FROM articles WHERE id=$1";
-    const result2 = (await client.query({
-      text: sql2,
-      values: [id_article]
-    })).rows
-    
-    if (result.length === 1 && result2.length === 1 && (result[0].admin || parseInt(result2[0].owner) === parseInt(id_user))) {
-      //si aucune nouvelle valeur est fournie on garde l'ancienne
-      if(!title_run){
-        title_run=result2[0].title
-      }if(!game){
-        game=result2[0].game
-      }if(!content_text){
-        content_text=result2[0].content
-      }if(!chrono){
-        chrono=result2[0].chrono
-      }if(!cover){
-        cover=result2[0].cover
-      }if(!run_link){
-        run_link=result2[0].run_link
-      }
-      const sql_update = "UPDATE articles set title = $1, game  = $2, content = $3, chrono = $4, cover = $5, run_link = $6  WHERE  id=$7 "
-      await client.query({
-        text: sql_update,
-        values: [ title_run,game, content_text,chrono,cover,run_link,id_article ]
-      });
-      res.status(200).json({message: "ok"});
-    } else {
-      res.status(400).json({message: "bad request -  invalid request"});
-    }
+  else {
+    const sql_update = "UPDATE articles set title = COALESCE($1, title), content = COALESCE($2, content), chrono = COALESCE($3, chrono), cover = COALESCE($4, cover), run_link = COALESCE($5, run_link) WHERE id=$6 AND owner=$7"
+    await client.query({
+      text: sql_update,
+      values: [req.body.title_run, req.body.content_text, req.body.chrono, req.body.cover, req.body.run_link, req.body.id_article, req.body.id_user]
+    });
+    res.status(200).json({message: "ok"});
   }
 })
 

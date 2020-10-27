@@ -103,26 +103,21 @@ var app = new Vue({
         alert("Une erreur est survenue lors de l'ajout, veuillez rééssayer.")
       }
 
-    },async updateRun (newRun,id_user,id) {
+    },
+    async updateRun (newRun, id_user, id) {
       try {
-      var video_embed =newRun.run_link.split('/embed').join('')
-      video_embed = video_embed.replace('watch?v=', '');
-      video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
-
-      const res = await axios.patch('/api/runmodif', {id_user: id_user, title_run: newRun.title,game: newRun.game, content_text: newRun.content ,chrono: newRun.chrono,cover:newRun.cover , run_link:video_embed,id_article:id })
-      this.test = res.data
+        let video_embed = newRun.run_link.split('/embed').join('')
+        video_embed = video_embed.replace('watch?v=', '');
+        video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
+        await axios.patch('/api/runmodif', {id_user: id_user, title_run: newRun.title, content_text: newRun.content, chrono: newRun.chrono, cover:newRun.cover, run_link:video_embed, id_article: id})
+        alert("Vos mises à jour ont bien été prises en compte.")
+        window.location.reload()
       }
       catch (e) { //Gestion des erreurs de l'API
-        if (e.response.status === 400) {
-          if (e.response.data.message.includes("bad request - request must content an id")) {
-            alert("merci de fournir un id d'autentification.")
-          } else if (e.response.data.message.includes("bad request - invalid request")) {
-            alert("merci de fournir un id d'autentification valide .")
-          }
-        }
+        alert("Une erreur est survenue, veuillez rééssayer.")
       }
     },
-    async deleteUser (username,password) {
+    async deleteUser (username, password) {
       try {
         const res = await axios.delete('/api/user', { params: {
             username: username,

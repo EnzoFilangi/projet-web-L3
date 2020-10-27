@@ -61,7 +61,7 @@
                 },
                 done: false, // Permet au site de savoir quand les données ont fini d'être récupérées au chargement de la page
                 offset: 0, // Permet de savoir le nombre d'articles déjà lus
-                order_by: null, // Sélection du type de recherche
+                order_by: "date", // Sélection du type de recherche
                 selection_criteria: null, // Critère de recherche
                 autocomplete_possibilities: [],
                 autocomplete_timer: null,
