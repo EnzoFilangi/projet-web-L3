@@ -9,13 +9,17 @@
 
       <div class="card-body">
 
-        <div class="text-center">
+
+
+
+          <div class="text-center">
           <input class="card-title " v-if="editingArticle.ver" v-model="editingArticle.title">
           <br v-if="editingArticle.ver">
 
         <h4 class="card-subtitle mb-2 text-muted" v-if="!editingArticle.ver">{{i.chrono}} - {{i.game}}</h4>
-          <input v-else class="card-subtitle mb-2 text-muted" v-model="editingArticle.chrono">
-          -
+          <input v-else class="card-subtitle mb-2 text-muted" v-model="editingArticle.chrono"><button type="button" v-on:click="navigateuser(i.owner)"  class="btn btn-light"> par {{ i.owner }}</button>
+<br>
+              -
           <input v-if="editingArticle.ver" class="card-subtitle mb-2 text-muted" v-model="editingArticle.game">
 
           <br v-if="editingArticle.ver">
@@ -63,6 +67,7 @@ module.exports = {
         username: null,
         admin: null,
       },
+
       done: false,
       articles: [],
       editingArticle: {
@@ -84,6 +89,7 @@ module.exports = {
       this.login()
     }
     this.articles = await this.getArticles()
+
 
     this.done = true
   },
@@ -108,6 +114,11 @@ module.exports = {
       window.location.reload()
 
     },
+      navigateuser (id) {
+          router.replace({
+              name: 'user', params: {username: id.toString()}
+          })
+      },
     abortEditArticle() {
       this.editingArticle = {
         ver: false,

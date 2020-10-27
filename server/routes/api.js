@@ -34,7 +34,7 @@ router.get('/articles', async (req, res) => {
             "(SELECT username FROM users WHERE id = articles.owner) as owner," +
             " title, " +
             "(SELECT display_name FROM games WHERE id = articles.game) as game," +
-            " content, chrono, cover FROM articles "
+            " content, chrono, run_link, cover FROM articles "
   switch (req.query.order_by) {
     case 'game':
       const game = sanitizeGameName(req.query.game);
@@ -61,7 +61,6 @@ router.get('/articles', async (req, res) => {
   }
   res.status(200).json(result)
 })
-
 
 /**
  * Cette route retourne le nombre total d'articles dans la base de données affichables selon les critères de recherche
@@ -161,6 +160,7 @@ router.patch('/runmodif', async (req, res) => {
   let cover = req.body.cover;
   let run_link = req.body.run_link
   const id_article = req.body.id_article
+  //on verifie la presence de la variable essentiel
   if(!id_user){
     res.status(400).json({message: "bad request - request must contain an id"});
   }
@@ -177,10 +177,9 @@ router.patch('/runmodif', async (req, res) => {
       text: sql2,
       values: [id_article]
     })).rows
-
-  console.log("1")
+    
     if (result.length === 1 && result2.length === 1 && (result[0].admin || parseInt(result2[0].owner) === parseInt(id_user))) {
-      console.log("12")
+      //si aucune nouvelle valeur est fournie on garde l'ancienne
       if(!title_run){
         title_run=result2[0].title
       }if(!game){
@@ -194,20 +193,16 @@ router.patch('/runmodif', async (req, res) => {
       }if(!run_link){
         run_link=result2[0].run_link
       }
-
-      console.log("13")
       const sql_update = "UPDATE articles set title = $1, game  = $2, content = $3, chrono = $4, cover = $5, run_link = $6  WHERE  id=$7 "
       await client.query({
         text: sql_update,
         values: [ title_run,game, content_text,chrono,cover,run_link,id_article ]
       });
-      console.log("14")
       res.status(200).json({message: "ok"});
     } else {
       res.status(400).json({message: "bad request -  invalid request"});
     }
   }
-
 })
 
 /**
@@ -278,7 +273,7 @@ router.post('/login', async (req, res) => {
  */
 router.get('/me', async (req, res) => {
   if(req.session.userId){
-    const sql = "SELECT id, email, username FROM users WHERE id=$1"
+    const sql = "SELECT id, email, username, admin FROM users WHERE id=$1"
     const result = (await client.query({
       text: sql,
       values: [req.session.userId]
@@ -293,8 +288,103 @@ router.get('/me', async (req, res) => {
   }
 })
 
-module.exports = router
+/*
+ * Cette route retourne les infos d'un user en fonction de son id
+ */
+router.get('/user', async (req, res) => {
+  if(req.query.username){
+    const sql = "SELECT  id,admin FROM users WHERE username=$1"
+    const result = (await client.query({
+      text: sql,
+      values: [req.query.username]
+    })).rows
+    if(result[0]){
+      res.status(200).json(result[0])
+    } else {
+      res.status(401).json({message: "include a valid username"});
+    }
+  } else {
+    res.status(401).json({message: "include an username"});
+  }
+})
 
+router.delete('/user', async (req, res) => {
+  const password = req.query.password
+
+  if(req.query.username){
+    const sql2 = "SELECT  id,admin,password FROM users WHERE username=$1"
+    const result = (await client.query({
+      text: sql2,
+      values: [req.query.username]
+    })).rows
+    if(result[0]){
+      if (await bcrypt.compare(password, result[0].password)) {
+
+        const sql = "DELETE FROM articles WHERE owner=$1"
+        await client.query({
+          text: sql,
+          values: [result[0].id]
+        })
+
+        const sql3 = "DELETE FROM users WHERE id=$1"
+        await client.query({
+          text: sql3,
+          values: [result[0].id]
+        })
+
+        res.status(200).json({message: "ok"})
+
+      } else {
+        res.status(400).json({message: "bad request - invalid password"});
+      }
+
+
+    } else {
+      res.status(401).json({message: "include a valid username"});
+    }
+  } else {
+    res.status(401).json({message: "include an username"});
+  }
+})
+
+router.patch('/user_mdp', async (req, res) => {
+  const password = req.body.params.password
+  let new_password = req.body.params.new_password
+
+  if(req.body.params.username){
+    const sql2 = "SELECT  id,admin,password FROM users WHERE username=$1"
+    const result = (await client.query({
+      text: sql2,
+      values: [req.body.params.username]
+    })).rows
+    if(result[0]){
+      if (await bcrypt.compare(password, result[0].password)) {
+
+        new_password= await bcrypt.hash(new_password, 10);
+
+        const sql_update = "UPDATE users set password = $1 WHERE  id=$2 "
+        await client.query({
+          text: sql_update,
+          values: [new_password, result[0].id ]
+        });
+
+        res.status(200).json({message: "ok"});
+
+      } else {
+        res.status(400).json({message: "bad request - invalid password"});
+      }
+
+
+    } else {
+      res.status(401).json({message: "include a valid username"});
+    }
+  } else {
+    res.status(401).json({message: "include an username"});
+  }
+})
+
+
+module.exports = router
 function sanitizeGameName(game) {
   const regex_void = /[#_%.*/='"]/g;
   const regex_space = /[\-]/g;
