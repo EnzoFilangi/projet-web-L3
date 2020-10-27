@@ -1,11 +1,13 @@
 const Register = window.httpVueLoader('./components/Register.vue')
 const Login = window.httpVueLoader('./components/Login.vue')
 const Homepage = window.httpVueLoader('./components/Homepage.vue')
+const CreateArticle = window.httpVueLoader('./components/CreateArticle.vue')
 const run = window.httpVueLoader('./components/run.vue')
 const user = window.httpVueLoader('./components/user.vue')
 
 const routes = [
   { path: '/', component: Homepage },
+  { path: '/create', component: CreateArticle },
   { path: '/register', component: Register },
   { path: '/login', component: Login },
   { path: '/user/:username', component: user,name: 'user' },
@@ -79,25 +81,31 @@ var app = new Vue({
       const res = await axios.get('/api/me')
       this.user = res.data
     },
-    async addRun (newRun,id_user) {
+    async addRun (newRun, id_user) {
+      var video_embed;
       try {
-        var video_embed =newRun.run_link.split('/embed').join('');
+        video_embed = newRun.video_link.split('/embed').join('');
         video_embed = video_embed.replace('watch?v=', '');
         video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
-      const res = await axios.post('/api/addrun', {id_user: id_user, title_run: newRun.title,game: newRun.game, content_text: newRun.content ,chrono: newRun.time,cover:newRun.cover , run_link:video_embed })
+        await axios.post('/api/addrun', {
+          id_user: id_user,
+          title_run: newRun.title,
+          game: newRun.game,
+          content_text: newRun.content,
+          chrono: newRun.time,
+          cover: newRun.cover,
+          run_link: video_embed
+          })
+        alert("Votre run a bien été publiée !")
+        window.location.hash = "#/" //On renvoie l'utilisateur sur la page d'accueil
       } catch (e) { //Gestion des erreurs de l'API
-        if (e.response.status === 400) {
-          if (e.response.data.message.includes("bad request - request must content an id")) {
-            alert("merci de fournir un id d'autentification.")
-          } else if (e.response.data.message.includes("bad request - invalid user")) {
-            alert("merci de fournir un id d'autentification valide .")
-          }
-        }
+        console.log(e)
+        alert("Une erreur est survenue lors de l'ajout, veuillez rééssayer.")
       }
 
     },async updateRun (newRun,id_user,id) {
       try {
-      var video_embed =newRun.run_link.split('/embed').join('');
+      var video_embed =newRun.run_link.split('/embed').join('')
       video_embed = video_embed.replace('watch?v=', '');
       video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
 
@@ -113,9 +121,6 @@ var app = new Vue({
           }
         }
       }
-
-
-
     },
     async deleteUser (username,password) {
       try {

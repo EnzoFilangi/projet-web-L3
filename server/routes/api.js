@@ -20,14 +20,13 @@ router.use((req, res, next) => {
   next()
 })
 
-/*
+/**
  * Cette route permet de récupérer une liste d'articles
  * Le body doit contenir d'éventuels paramètres de recherche, ainsi que l'offset de lecture des articles
  */
 router.get('/articles', async (req, res) => {
   let offset = 0;
   try {
-
     offset = req.query.offset;
   } catch (e) {} //Si aucun offset n'est spécifié dans la requête, on va générer une erreur que l'on ignore
   let result;
@@ -35,31 +34,26 @@ router.get('/articles', async (req, res) => {
             "(SELECT username FROM users WHERE id = articles.owner) as owner," +
             " title, " +
             "(SELECT display_name FROM games WHERE id = articles.game) as game," +
-            " content, chrono,run_link, cover FROM articles "
+            " content, chrono, run_link, cover FROM articles "
   switch (req.query.order_by) {
     case 'game':
-      const game = req.query.game.toLowerCase().replace(/[#_%]/g,'').replace(/[\-]/g, ' ');
+      const game = sanitizeGameName(req.query.game);
       sql += "WHERE game = (SELECT id FROM games WHERE name = $1 LIMIT 1) ORDER by id DESC LIMIT 20 OFFSET $2";
-
       result = (await client.query({
         text: sql,
         values: [game, offset]
       })).rows
       break;
     case 'user':
-
       const user = req.query.user;
       sql += "WHERE owner = (SELECT id FROM users WHERE username = $1 LIMIT 1) ORDER by id DESC LIMIT 20 OFFSET $2";
-
       result = (await client.query({
         text: sql,
         values: [user, offset]
       })).rows
       break;
     default:
-
       sql += "ORDER by id DESC LIMIT 20 OFFSET $1";
-
       result = (await client.query({
         text: sql,
         values: [offset]
@@ -68,13 +62,48 @@ router.get('/articles', async (req, res) => {
   res.status(200).json(result)
 })
 
+/**
+ * Cette route retourne le nombre total d'articles dans la base de données affichables selon les critères de recherche
+ * Elle doit recevoir deux paramètres :
+ * orderBy: 'game'|'user' ; défini quelle table rechercher (facultatif)
+ * searchString: string ; défini le critère de recherche (ignoré si orderBy n'est pas présent)
+ */
+router.get('/articleQuantity', async (req, res) => {
+  let result;
+  switch (req.query.orderBy) {
+    case 'game':
+      const game = sanitizeGameName(req.query.searchString);
+      result = ( await client.query({
+        text: "SELECT COUNT(*) FROM articles WHERE game = (SELECT id FROM games WHERE name = $1 LIMIT 1)",
+        values: [game]
+      })).rows[0]
+      res.status(200).json(result)
+      break;
+    case 'user':
+      result = ( await client.query({
+        text: "SELECT COUNT(*) FROM articles WHERE owner = (SELECT id FROM users WHERE username = $1)",
+        values: [req.query.searchString]
+      })).rows[0]
+      res.status(200).json(result)
+      break;
+    default:
+      result = ( await client.query({
+        text: "SELECT COUNT(*) FROM articles"
+      })).rows[0]
+      res.status(200).json(result)
+  }
+})
 
-router.get('/search', async (req, res) => {
+/**
+ * Cette route retourne le nom d'affichage d'un jeu ou d'un utilisateur basé sur une partie seulement de son nom
+ * Elle doit recevoir deux paramètres :
+ * orderBy: 'game'|'user' ; défini quelle table rechercher
+ * searchString: string ; défini le critère de recherche
+ */
+router.get('/searchName', async (req, res) => {
   const order_by = req.query.orderBy;
-  const regex_void = /[#_%.]/g;
-  const regex_space = /[\-]/g;
   if (order_by === 'game') {
-    const game = "%" + req.query.searchString.toLowerCase().replace(regex_void,'').replace(regex_space, ' ') + "%";
+    const game = "%" + sanitizeGameName(req.query.searchString) + "%";
     const result = (await client.query({
       text: "SELECT name, display_name FROM games WHERE name LIKE $1",
       values: [game]
@@ -92,58 +121,37 @@ router.get('/search', async (req, res) => {
 })
 
 
-/*
+/**
  * Cette route permet d'ajouter un nouvel article/ run
  * Le body doit contenir l'id de l'utilisateur, le titre de la run, le jeu, le contenue, le temps, une image de couverture et le liens vers la video
  */
 router.post('/addrun', async (req, res) => {
-  //on recupere les variables
-  const id_user = req.body.id_user;
-  const title_run = req.body.title_run;
-  const game = req.body.game;
-  const content_text = req.body.content_text;
-  const chrono = req.body.chrono;
-  const cover = req.body.cover;
-  const run_link = req.body.run_link
-
-
-  //on verifie la presence de la variable essentiel
-  if(!id_user){
-    res.status(400).json({message: "bad request - request must content an id"});
+  const new_run = req.body;
+  const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2, (SELECT id FROM games WHERE display_name = $3 LIMIT 1), $4, $5, $6, $7)"
+  try {
+    await client.query({
+      text: sql_insert,
+      values: [
+          new_run.id_user,
+          new_run.title_run,
+          new_run.game,
+          new_run.content_text,
+          new_run.chrono,
+          new_run.cover,
+          new_run.run_link
+      ]
+    });
+    res.status(200).json({message: "ok"})
+  } catch (e) {
+    res.status(400).json({message: "bad request"});
   }
-  else{
-
-    const sql = "SELECT * FROM users WHERE id=$1";
-    const result = (await client.query({
-      text: sql,
-      values: [id_user]
-    })).rows
-
-    if (result.length === 1) {
-
-      const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2,$3, $4,$5, $6,$7)"
-      await client.query({
-        text: sql_insert,
-        values: [id_user, title_run, game, content_text, chrono, cover, run_link]
-      });
-
-      res.status(200).json({message: "ok"})
-    } else {
-      res.status(400).json({message: "bad request - invalid user"});
-    }
-  }
-
 })
 
-/*
+/**
  * Cette route permet de modifier article/ run
  * Le body doit contenir l'id de l'utilisateur, le titre de la run, le jeu, le contenue, le temps, une image de couverture et le liens vers la video
  */
-
 router.patch('/runmodif', async (req, res) => {
-
-  //on recupere les variables
-
   const id_user = req.body.id_user;
   let title_run = req.body.title_run;
   let game = req.body.game;
@@ -152,9 +160,7 @@ router.patch('/runmodif', async (req, res) => {
   let cover = req.body.cover;
   let run_link = req.body.run_link
   const id_article = req.body.id_article
-
   //on verifie la presence de la variable essentiel
-
   if(!id_user){
     res.status(400).json({message: "bad request - request must contain an id"});
   }
@@ -171,9 +177,9 @@ router.patch('/runmodif', async (req, res) => {
       text: sql2,
       values: [id_article]
     })).rows
+    
     if (result.length === 1 && result2.length === 1 && (result[0].admin || parseInt(result2[0].owner) === parseInt(id_user))) {
       //si aucune nouvelle valeur est fournie on garde l'ancienne
-
       if(!title_run){
         title_run=result2[0].title
       }if(!game){
@@ -187,22 +193,19 @@ router.patch('/runmodif', async (req, res) => {
       }if(!run_link){
         run_link=result2[0].run_link
       }
-
       const sql_update = "UPDATE articles set title = $1, game  = $2, content = $3, chrono = $4, cover = $5, run_link = $6  WHERE  id=$7 "
       await client.query({
         text: sql_update,
         values: [ title_run,game, content_text,chrono,cover,run_link,id_article ]
       });
-
       res.status(200).json({message: "ok"});
     } else {
       res.status(400).json({message: "bad request -  invalid request"});
     }
   }
-
 })
 
-/*
+/**
  * Cette route permet d'ajouter un nouvel utilisateur
  * Le body doit contenir l'email et le mot de passe de l'utilisateur
  */
@@ -235,7 +238,7 @@ router.post('/register', async (req, res) => {
   }
 })
 
-/*
+/**
  * Cette router permet d'authentifier un utilisateur
  * Le body doit contenir l'email et le password de l'utilisateur
  */
@@ -265,12 +268,12 @@ router.post('/login', async (req, res) => {
   }
 })
 
-/*
+/**
  * Cette route retourne l'utilisateur actuellement connecté
  */
 router.get('/me', async (req, res) => {
   if(req.session.userId){
-    const sql = "SELECT id, email, username,admin FROM users WHERE id=$1"
+    const sql = "SELECT id, email, username, admin FROM users WHERE id=$1"
     const result = (await client.query({
       text: sql,
       values: [req.session.userId]
@@ -284,7 +287,6 @@ router.get('/me', async (req, res) => {
     res.status(401).json({message: "no user logged in."});
   }
 })
-
 
 /*
  * Cette route retourne les infos d'un user en fonction de son id
@@ -383,3 +385,8 @@ router.patch('/user_mdp', async (req, res) => {
 
 
 module.exports = router
+function sanitizeGameName(game) {
+  const regex_void = /[#_%.*/='"]/g;
+  const regex_space = /[\-]/g;
+  return game.toLowerCase().replace(regex_void,'').replace(regex_space, ' ')
+}
