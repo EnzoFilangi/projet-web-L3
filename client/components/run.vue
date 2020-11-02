@@ -123,7 +123,6 @@ module.exports = {
     },
     navigateuser (id) {
         window.location.hash = "#/user/"+id
-        window.location.reload()
     },
     abortEditArticle() {
       if(confirm("Voulez-vous vraiment annuler vos modifications ?")) {

@@ -142,14 +142,12 @@ module.exports = {
         this.$emit('edit-user', this.username, this.password, this.Newpassword1)
 
       }
-
-
-            },
-            deleteUser() {
-                var answer = window.confirm("voulez vous vraiment suprimer");
-                if (answer) {
-                    this.$emit('delete-user', this.username, this.password)
-                }
+    },
+    deleteUser() {
+      var answer = window.confirm("voulez vous vraiment suprimer");
+      if (answer) {
+        this.$emit('delete-user', this.username, this.password)
+      }
 
     },
     async getArticles() {
