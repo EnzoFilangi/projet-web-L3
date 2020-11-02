@@ -167,6 +167,12 @@ module.exports = {
         return content.slice(0, max_char) + "...";
       }
     },
+  },
+  watch: {
+    $route: function () {
+      //Rechargement de la page lorsque le profil change
+      window.location.reload()
+    }
   }
 }
 </script>
