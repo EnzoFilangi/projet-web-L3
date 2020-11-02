@@ -143,6 +143,25 @@ var app = new Vue({
       }
 
 
+    },
+    async deleteArticle (id_article) {
+
+      try {
+        const res = await axios.delete('/api/article', {params: {
+            id_article: id_article,
+          }})
+        this.test = res.data
+        window.location.hash = "#/"
+      }
+      catch (e) { //Gestion des erreurs de l'API
+        if (e.response.data.message.includes("bad request - invalid user")) {
+          alert("utilisateur invalide.")
+        } else {
+          alert("une erreur c'est produite ")        }
+
+      }
+
+
 
     },
     async editUser (username,password,newpassword) {

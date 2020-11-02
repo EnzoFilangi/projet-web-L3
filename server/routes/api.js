@@ -317,6 +317,7 @@ router.delete('/user', async (req, res) => {
       text: sql2,
       values: [req.query.username]
     })).rows
+
     if(result[0]){
       if (await bcrypt.compare(password, result[0].password)) {
 
@@ -346,6 +347,7 @@ router.delete('/user', async (req, res) => {
     res.status(401).json({message: "include an username"});
   }
 })
+
 /**
  * Cette route permet de modifier le mot de passe d'un utilisateur
  */
@@ -386,6 +388,43 @@ router.patch('/user_mdp', async (req, res) => {
   }
 })
 
+
+
+/**
+ * Cette route permet de suprimer un article
+ */
+router.delete('/article', async (req, res) => {
+  const id_article = req.query.id_article
+  if (req.session.userId) {
+    const sql = "SELECT username, admin FROM users WHERE id=$1"
+    const result = (await client.query({
+      text: sql,
+      values: [req.session.userId]
+    })).rows
+
+    const sql2 = "SELECT owner FROM articles WHERE id=$1"
+    const result2 = (await client.query({
+      text: sql,
+      values: [id_article]
+    })).rows
+
+    if (result[0].admin || result2[0].owner == result[0].username) {
+
+      const sql = "DELETE FROM articles WHERE id=$1"
+      await client.query({
+        text: sql,
+        values: [id_article]
+      })
+      res.status(200).json({message: "ok"})
+    } else {
+      res.status(400).json({message: "bad request - invalid user"});
+    }
+
+  } else {
+    res.status(401).json({message: "no user logged in."});
+  }
+
+})
 
 module.exports = router
 function sanitizeGameName(game) {

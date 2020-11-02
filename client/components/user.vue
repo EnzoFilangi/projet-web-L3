@@ -157,7 +157,6 @@
 
             },
             deleteUser() {
-                console.log(this.password)
                 var answer = window.confirm("voulez vous vraiment suprimer");
                 if (answer) {
                     this.$emit('delete-user', this.username, this.password)
