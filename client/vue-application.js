@@ -89,8 +89,6 @@ var app = new Vue({
         video_embed = video_embed.replace('watch?v=', '');
         video_embed = [video_embed.slice(0, 23), "/embed", video_embed.slice(23)].join('');
 
-
-
         await axios.post('/api/addrun', {
           id_user: id_user,
           title_run: newRun.title,
@@ -103,8 +101,13 @@ var app = new Vue({
         alert("Votre run a bien été publiée !")
         window.location.hash = "#/" //On renvoie l'utilisateur sur la page d'accueil
       } catch (e) { //Gestion des erreurs de l'API
-        console.log(e)
-        alert("Une erreur est survenue lors de l'ajout, veuillez rééssayer.")
+        if (e.response.data.message.includes("please include an existing game name")) {
+          alert("Merci d'entrer un nom de jeu valide.")
+        } else if (e.response.data.message.includes("please respect chrono field validation (hh:mm:ss)")) {
+          alert("Merci d'entrer un temps de run valide (hh:mm:ss).")
+        } else {
+          alert("Une erreur est survenue lors de l'ajout, veuillez rééssayer.")
+        }
       }
 
     },

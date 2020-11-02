@@ -146,14 +146,30 @@ router.get('/searchName', async (req, res) => {
  */
 router.post('/addrun', async (req, res) => {
   const new_run = req.body;
-  const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2, (SELECT id FROM games WHERE display_name = $3 LIMIT 1), $4, $5, $6, $7)"
+  let id;
+  try{
+    id = (await client.query({
+      text: "(SELECT id FROM games WHERE display_name = $1 LIMIT 1)",
+      values: [
+        new_run.game,
+      ]
+    })).rows[0].id;
+  } catch (e) {
+    res.status(400).json({message: "bad request - please include an existing game name"});
+    return
+  }
+  if(!new_run.chrono.match("[0-9]+:[0-9][0-9]:[0-9][0-9])")){
+    res.status(400).json({message: "bad request - please respect chrono field validation (hh:mm:ss)"});
+    return
+  }
+  const sql_insert = "INSERT INTO articles (owner, title, game, content, chrono, cover, run_link) VALUES ($1, $2, $3, $4, $5, $6, $7)"
   try {
     await client.query({
       text: sql_insert,
       values: [
           new_run.id_user,
           new_run.title_run,
-          new_run.game,
+          id,
           new_run.content_text,
           new_run.chrono,
           new_run.cover,
