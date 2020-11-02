@@ -158,7 +158,7 @@ router.post('/addrun', async (req, res) => {
     res.status(400).json({message: "bad request - please include an existing game name"});
     return
   }
-  if(!new_run.chrono.match("[0-9]+:[0-9][0-9]:[0-9][0-9])")){
+  if(!new_run.chrono.match("[0-9]+:[0-9][0-9]:[0-9][0-9]")){
     res.status(400).json({message: "bad request - please respect chrono field validation (hh:mm:ss)"});
     return
   }
