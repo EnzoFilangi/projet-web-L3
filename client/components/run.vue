@@ -49,6 +49,7 @@
         </div>
         <!-- le bouton n'est accessible que si l'utilisateur est un admin ou le createur de la page-->
         <button v-if="!editingArticle.ver && (user.admin || user.id === article.owner)" type="button" @click="editArticle()" class="btn btn-secondary">Editer</button>
+        <button v-if="!editingArticle.ver && (user.admin || user.id === article.owner)" type="button" @click="deleteArt()" class="btn btn-danger">suprimer</button>
       </div>
     </div>
   </div>
@@ -101,6 +102,13 @@ module.exports = {
     },
     async getArticle () {
         return (await axios.get('/api/articles/byid', {params: {id: this.id}})).data[0]
+    },
+    deleteArt() {
+      var answer = window.confirm("voulez vous vraiment suprimer");
+      if (answer) {
+        this.$emit('delete-article', this.id)
+      }
+
     },
     editArticle () {
       this.editingArticle.ver= true;
