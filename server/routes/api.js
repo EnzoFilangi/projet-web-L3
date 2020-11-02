@@ -67,6 +67,7 @@ router.get('/articles', async (req, res) => {
  * Doit recevoir l'id en paramètre
  */
 router.get('/articles/byid', async (req, res) => {
+  try {
     const id = req.query.id;
     const sql = "SELECT id, " +
         "(SELECT username FROM users WHERE id = articles.owner) as owner, " +
@@ -75,10 +76,35 @@ router.get('/articles/byid', async (req, res) => {
         "content, chrono, run_link, cover " +
         "FROM articles WHERE id = $1";
     const result = (await client.query({
-        text: sql,
-        values: [id]
+      text: sql,
+      values: [id]
     })).rows;
     res.status(200).json(result);
+  } catch (e) {
+    res.status(400)
+  }
+})
+
+/**
+ * Cette route permet de récupérer tous les articles publiés par un utilisateur
+ */
+router.get('/articles/byuser', async (req, res) => {
+  try {
+    const user = req.query.username;
+    const sql = "SELECT id, " +
+        "(SELECT username FROM users WHERE id = articles.owner) as owner, " +
+        "title, " +
+        "(SELECT display_name FROM games WHERE id = articles.game) as game, " +
+        "content, chrono, run_link, cover " +
+        "FROM articles WHERE owner = (SELECT id FROM users WHERE username = $1) ORDER by id DESC";
+    const result = (await client.query({
+      text: sql,
+      values: [user]
+    })).rows;
+    res.status(200).json(result);
+  } catch (e) {
+    res.status(400);
+  }
 })
 
 /**
@@ -289,7 +315,7 @@ router.get('/me', async (req, res) => {
  */
 router.get('/user', async (req, res) => {
   if(req.query.username){
-    const sql = "SELECT  id,admin FROM users WHERE username=$1"
+    const sql = "SELECT  id, admin FROM users WHERE username=$1"
     const result = (await client.query({
       text: sql,
       values: [req.query.username]
@@ -307,12 +333,11 @@ router.get('/user', async (req, res) => {
 /**
  * Cette route permet de suprimer un utilisateur ansi que tout ces articles
  */
-
 router.delete('/user', async (req, res) => {
   const password = req.query.password
 
   if(req.query.username){
-    const sql2 = "SELECT  id,admin,password FROM users WHERE username=$1"
+    const sql2 = "SELECT  id, admin, password FROM users WHERE username=$1"
     const result = (await client.query({
       text: sql2,
       values: [req.query.username]
@@ -346,10 +371,10 @@ router.delete('/user', async (req, res) => {
     res.status(401).json({message: "include an username"});
   }
 })
+
 /**
  * Cette route permet de modifier le mot de passe d'un utilisateur
  */
-
 router.patch('/user_mdp', async (req, res) => {
   const password = req.body.params.password
   let new_password = req.body.params.new_password
