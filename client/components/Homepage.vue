@@ -213,6 +213,9 @@
                 if (this.offset === Math.floor(max/20)*20) this.disable_next_page = true; // On test si on a atteint la page finale ; on ne se content pas de le mettre dans le if au dessus sinon la condition ne se déclenche pas la première fois que l'on atteint la page maximale
 
                 await this.refreshArticles();
+
+                window.location.hash = "#"
+
             }
         },
         computed: {
