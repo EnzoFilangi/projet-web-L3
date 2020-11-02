@@ -136,28 +136,26 @@ var app = new Vue({
       }
       catch (e) { //Gestion des erreurs de l'API
         if (e.response.data.message.includes("bad request - invalid password")) {
-          alert("mauvais mot de passe.")
+          alert("Mauvais mot de passe.")
         } else {
-          alert("une erreur c'est produite ")        }
+          alert("Une erreur s'est produite ")        }
 
       }
 
 
     },
     async deleteArticle (id_article) {
-
       try {
-        const res = await axios.delete('/api/article', {params: {
+        await axios.delete('/api/article', {params: {
             id_article: id_article,
           }})
-        this.test = res.data
         window.location.hash = "#/"
       }
       catch (e) { //Gestion des erreurs de l'API
         if (e.response.data.message.includes("bad request - invalid user")) {
-          alert("utilisateur invalide.")
+          alert("Utilisateur invalide.")
         } else {
-          alert("une erreur c'est produite ")        }
+          alert("Une erreur s'est produite ")        }
 
       }
 
@@ -166,13 +164,11 @@ var app = new Vue({
     },
     async editUser (username,password,newpassword) {
       try {
-        const res = await axios.patch('/api/user_mdp', { params: {
+        await axios.patch('/api/user_mdp', { params: {
             username: username,
             password: password,
             new_password: newpassword,
           }})
-        this.test = res.data
-        console.log(res.data)
         window.location.hash = "#/"
       }
       catch (e) { //Gestion des erreurs de l'API

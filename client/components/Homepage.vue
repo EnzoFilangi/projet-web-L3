@@ -15,7 +15,7 @@
                 <div v-if="order_by === 'game' || order_by === 'user'" style="display: inline; position: relative">
                     <input type="text" v-model="selection_criteria" :placeholder="search_placeholder" @keydown.tab.prevent="autocomplete(0)" @input="autocompleteTimeOut" v-on:blur="hideAutocomplete()">
                     <ul class="autocomplete left-aligned-text" v-if="autocomplete_possibilities.length > 0 && display_autocomplete">
-                        <li v-for="(auto, i) in autocomplete_possibilities" @click="autocomplete(i)">
+                        <li v-for="(auto, i) in autocomplete_possibilities" :key="auto.id" @click="autocomplete(i)">
                             <span v-if="order_by === 'game'">{{auto.display_name}}</span>
                             <span v-else-if="order_by === 'user'">{{auto.username}}</span>
                         </li>
@@ -65,6 +65,7 @@
                 selection_criteria: null, // Critère de recherche
                 autocomplete_possibilities: [],
                 autocomplete_timer: null,
+                hide_autocomplete_timer: null,
                 display_autocomplete: false,
                 articles: [], // Articles à afficher
                 title: "", // Titre de la page, mis à jours lors de la récupération des articles
@@ -183,7 +184,15 @@
                 }
             },
             hideAutocomplete () {
-              this.display_autocomplete = false;
+              // Cache la popup d'autocomplétion lorsque l'utilisateur déselectionne le champ input associé
+              if(this.hide_autocomplete_timer) {
+                clearTimeout(this.autocomplete_timer);
+                this.autocomplete_timer = null;
+              }
+              // On est obligé d'attendre un peu sinon le div est caché avant que l'event click soit trigger
+              this.autocomplete_timer = setTimeout(() => {
+                this.display_autocomplete = false;
+              }, 100);
             },
             formatContentPreview (content) {
                 content = content.split("\n")[0];

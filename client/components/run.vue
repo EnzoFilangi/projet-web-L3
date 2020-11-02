@@ -49,7 +49,7 @@
         </div>
         <!-- le bouton n'est accessible que si l'utilisateur est un admin ou le createur de la page-->
         <button v-if="!editingArticle.ver && (user.admin || user.id === article.owner)" type="button" @click="editArticle()" class="btn btn-secondary">Editer</button>
-        <button v-if="!editingArticle.ver && (user.admin || user.id === article.owner)" type="button" @click="deleteArt()" class="btn btn-danger">suprimer</button>
+        <button v-if="!editingArticle.ver && (user.admin || user.id === article.owner)" type="button" @click="deleteArt()" class="btn btn-danger">Supprimer</button>
       </div>
     </div>
   </div>
@@ -104,7 +104,7 @@ module.exports = {
         return (await axios.get('/api/articles/byid', {params: {id: this.id}})).data[0]
     },
     deleteArt() {
-      var answer = window.confirm("voulez vous vraiment suprimer");
+      var answer = window.confirm("Voulez vous vraiment supprimer l'article");
       if (answer) {
         this.$emit('delete-article', this.id)
       }
@@ -123,6 +123,7 @@ module.exports = {
     },
     navigateuser (id) {
         window.location.hash = "#/user/"+id
+        window.location.reload()
     },
     abortEditArticle() {
       if(confirm("Voulez-vous vraiment annuler vos modifications ?")) {
