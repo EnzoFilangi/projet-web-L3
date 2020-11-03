@@ -331,6 +331,18 @@ router.get('/user', async (req, res) => {
 })
 
 /**
+ * Cette route déconnecte l'utilisateur
+ */
+router.post('/disconnect', (req, res) => {
+  if (req.session.userId) {
+    req.session.destroy();
+    res.status(200).json({message: `user disconnected`});
+  } else {
+    res.status(400).json({message: 'bad request - no user logged in.'})
+  }
+})
+
+/**
  * Cette route permet de suprimer un utilisateur ansi que tout ces articles
  */
 router.delete('/user', async (req, res) => {

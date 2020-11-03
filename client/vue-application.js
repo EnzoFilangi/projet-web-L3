@@ -126,22 +126,19 @@ var app = new Vue({
     },
     async deleteUser (username, password) {
       try {
-        const res = await axios.delete('/api/user', { params: {
+        await axios.delete('/api/user', { params: {
             username: username,
             password: password,
           }})
-        this.test = res.data
-        console.log(res.data)
         window.location.hash = "#/"
       }
       catch (e) { //Gestion des erreurs de l'API
         if (e.response.data.message.includes("bad request - invalid password")) {
           alert("Mauvais mot de passe.")
         } else {
-          alert("Une erreur s'est produite ")        }
-
+          alert("Une erreur s'est produite ")
+        }
       }
-
 
     },
     async deleteArticle (id_article) {
@@ -158,11 +155,8 @@ var app = new Vue({
           alert("Une erreur s'est produite ")        }
 
       }
-
-
-
     },
-    async editUser (username,password,newpassword) {
+    async editUser (username, password, newpassword) {
       try {
         await axios.patch('/api/user_mdp', { params: {
             username: username,
@@ -178,9 +172,11 @@ var app = new Vue({
           alert("une erreur c'est produite ")        }
 
       }
-
-
-
     },
+    async disconnect () {
+      await axios.post('/api/disconnect');
+      window.location.hash = "#/login";
+      window.location.reload();
+    }
   }
 })

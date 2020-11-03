@@ -26,10 +26,8 @@
                 <ul class="navbar-nav ml-auto">
                     <li><router-link to='/register' class="nav-item nav-link" v-if="!user.id && done">S'enregistrer</router-link></li>
                     <li><router-link to='/login' class="nav-item nav-link" v-if="!user.id && done">Se connecter</router-link></li>
-
                     <li><router-link :to="`/user/${user.username}`"  style="text-decoration: none; color: black" class="stretched-link" v-if="user.username && done">Bonjour {{user.username}} !</router-link></li>
-
-
+                    <li><button @click="disconnect()" style="text-decoration: none; color: black; margin-left: 15px; border: none" class="stretched-link" v-if="user.username && done"><small class="text-muted">Se déconnecter</small></button></li>
                 </ul>
             </nav>
           </header>
@@ -47,5 +45,4 @@
         </div>
         <script src="/vue-application.js"></script>
     </body>
-
 </html>
