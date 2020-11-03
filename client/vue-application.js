@@ -38,7 +38,7 @@ var app = new Vue({
   methods: {
     async registerUser (email, password, username) {
       try{
-        const res = await axios.post('/api/register', {email: email, password: password, username: username})
+        await axios.post('/api/register', {email: email, password: password, username: username})
         alert("Vous êtes désormais enregistré !")
         window.location.hash = "#/" //On renvoie l'utilisateur sur la page d'accueil
       } catch (e) { //Gestion des erreurs de l'API
@@ -57,7 +57,7 @@ var app = new Vue({
     },
     async logUser (email, password) {
       try {
-        const res = await axios.post('/api/login', {email: email, password: password})
+        await axios.post('/api/login', {email: email, password: password})
         await this.getUser();
         alert("Vous êtes désormais connecté !")
         window.location.hash = "#/" //On renvoie l'utilisateur sur la page d'accueil
@@ -82,7 +82,7 @@ var app = new Vue({
       this.user = res.data
     },
     async addRun (newRun, id_user) {
-      var video_embed;
+      let video_embed;
       try {
         // on transforme un simple lien youtube en embed youtube
         video_embed = newRun.video_link.split('/embed').join('');
