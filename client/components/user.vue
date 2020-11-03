@@ -144,8 +144,7 @@ module.exports = {
       }
     },
     deleteUser() {
-      var answer = window.confirm("voulez vous vraiment suprimer");
-      if (answer) {
+      if (window.confirm("Voulez vous vraiment suprimer ce compte ?")) {
         this.$emit('delete-user', this.username, this.password)
       }
 
