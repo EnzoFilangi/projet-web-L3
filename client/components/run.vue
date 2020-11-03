@@ -48,8 +48,8 @@
           </div>
         </div>
         <!-- le bouton n'est accessible que si l'utilisateur est un admin ou le createur de la page-->
-        <button v-if="!editingArticle.ver && (user.admin || user.id === article.owner)" type="button" @click="editArticle()" class="btn btn-secondary">Editer</button>
-        <button v-if="!editingArticle.ver && (user.admin || user.id === article.owner)" type="button" @click="deleteArt()" class="btn btn-danger">Supprimer</button>
+        <button v-if="!editingArticle.ver && (user.admin || user.username === article.owner)" type="button" @click="editArticle()" class="btn btn-secondary">Editer</button>
+        <button v-if="!editingArticle.ver && (user.admin || user.username === article.owner)" type="button" @click="deleteArt()" class="btn btn-danger">Supprimer</button>
       </div>
     </div>
   </div>

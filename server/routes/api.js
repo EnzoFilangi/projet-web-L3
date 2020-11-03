@@ -250,12 +250,16 @@ router.post('/register', async (req, res) => {
     if (query.rows.length > 0) {
       res.status(400).json({message: "bad request - user already exists"})
     } else {
-      const sql_insert = "INSERT INTO users (email, password, username, admin) VALUES ($1, $2, $3, FALSE)"
-      await client.query({
-        text: sql_insert,
-        values: [email, password, username]
-      });
-      res.status(200).json({message: "ok"});
+      try {
+        const sql_insert = "INSERT INTO users (email, password, username, admin) VALUES ($1, $2, $3, FALSE)"
+        await client.query({
+          text: sql_insert,
+          values: [email, password, username]
+        });
+        res.status(200).json({message: "ok"});
+      } catch (e) {
+        res.status(500).json({message: 'internal server error'})
+      }
     }
   }
 })
@@ -303,7 +307,7 @@ router.get('/me', async (req, res) => {
     if(result){
       res.status(200).json(result[0]);
     } else {
-      res.status(500).json("internal server error");
+      res.status(500).json({message: 'internal server error'});
     }
   } else {
     res.status(401).json({message: "no user logged in."});

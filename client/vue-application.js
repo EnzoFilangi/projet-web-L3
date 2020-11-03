@@ -50,6 +50,8 @@ var app = new Vue({
           } else if (e.response.data.message.includes("bad request - username must be shorter than 30 characters")) {
             alert("Veuillez utiliser un nom d'utilisateur de moins de 30 caractères.") //Ne devrait pas se déclencher car vérifié auparavant part le component
           }
+        } else if (e.response.status === 500) {
+          alert("Une erreur s'est produite sur le serveur, merci de réessayer.")
         } else {
           alert("Une erreur est survenue.")
         }
