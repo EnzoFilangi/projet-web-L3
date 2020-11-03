@@ -301,9 +301,9 @@ router.get('/me', async (req, res) => {
       values: [req.session.userId]
     })).rows
     if(result){
-      res.status(200).json(result[0])
+      res.status(200).json(result[0]);
     } else {
-      res.status(500)
+      res.status(500).json("internal server error");
     }
   } else {
     res.status(401).json({message: "no user logged in."});
@@ -440,12 +440,11 @@ router.delete('/article', async (req, res) => {
 
     const sql2 = "SELECT owner FROM articles WHERE id=$1"
     const result2 = (await client.query({
-      text: sql,
+      text: sql2,
       values: [id_article]
     })).rows
 
-    if (result[0].admin || result2[0].owner == result[0].username) {
-
+    if (result[0].admin || result2[0].owner === req.session.userId) {
       const sql = "DELETE FROM articles WHERE id=$1"
       await client.query({
         text: sql,
