@@ -44,7 +44,7 @@ module.exports = {
   }
 
   .centered {
-    margin: 0px auto;
+    margin: 0 auto;
     justify-content: center;
     display: flex;
     flex-wrap: wrap;
