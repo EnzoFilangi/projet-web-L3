@@ -104,8 +104,7 @@ module.exports = {
         return (await axios.get('/api/articles/byid', {params: {id: this.id}})).data[0]
     },
     deleteArt() {
-      var answer = window.confirm("Voulez vous vraiment supprimer l'article");
-      if (answer) {
+      if (window.confirm("Voulez vous vraiment supprimer l'article ?")) {
         this.$emit('delete-article', this.id)
       }
 
