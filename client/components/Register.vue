@@ -3,14 +3,14 @@
     <h2>Création de compte</h2>
     <form @submit.prevent="register">
       <div class="form-group">
-        <input class="take-width centered-text" type="email" v-model="email" placeholder="Email" required>
+        <input class="take-width centered-text form-control" type="email" v-model="email" placeholder="Email" required>
       </div>
       <div class="form-group">
-        <input class="take-width centered-text" type="text" v-model="username" placeholder="Nom d'utilisateur" maxlength="30" required>
+        <input class="take-width centered-text form-control" type="text" v-model="username" placeholder="Nom d'utilisateur" maxlength="30" required>
       </div>
-      <div class="form-group">
-        <input class="centered-text" type="password" v-model="password" placeholder="Mot de passe" required>
-        <input class="centered-text" type="password" v-model="password_verif" placeholder="Validation du mot de passe" required v-bind:class="{different: password !== password_verif}">
+      <div class="form-row">
+        <input class="centered-text form-control col" style="margin-left: 5px; margin-right: 10px" type="password" v-model="password" placeholder="Mot de passe" required>
+        <input class="centered-text form-control col" style="margin-left: 10px; margin-right: 5px" type="password" v-model="password_verif" placeholder="Validation du mot de passe" required v-bind:class="{different: password !== password_verif}">
       </div>
       <p v-if="password !== password_verif" class="different-text">Attention les deux mots de passe sont différents</p>
       <button class="btn take-width" type="submit" v-bind:class="[(password === password_verif && email) ? 'btn-primary' : 'btn-secondary disabled']">Ajouter</button>
@@ -45,10 +45,8 @@ module.exports = {
 
   .centered {
     margin: 0 auto;
-    justify-content: center;
-    display: flex;
-    flex-wrap: wrap;
-    max-width: 500px;
+    max-width: 700px;
+    text-align: center;
   }
 
   .take-width {
@@ -71,4 +69,10 @@ module.exports = {
   .centered-text {
     text-align: center;
   }
+
+  .form-row {
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
 </style>
