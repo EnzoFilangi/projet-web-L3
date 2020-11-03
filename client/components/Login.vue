@@ -2,9 +2,9 @@
   <div class="no-overflow centered">
     <h2>Connexion</h2>
     <form @submit.prevent="login">
-      <div class="form-group">
-        <input class="centered-text" type="email" v-model="email" placeholder="Email" required>
-        <input class="centered-text" type="password" v-model="password" placeholder="Mot de passe" required>
+      <div class="form-row">
+        <input class="centered-text form-control col" type="email" v-model="email" placeholder="Email" required>
+        <input class="centered-text form-control col" type="password" v-model="password" placeholder="Mot de passe" required>
       </div>
       <button class="btn btn-primary take-width" type="submit">Se connecter</button>
       <button @click="register" class="btn btn-secondary take-width" style="margin-top: 1%">Pas de compte ? S'inscrire</button>
@@ -38,10 +38,8 @@ module.exports = {
 
   .centered {
     margin: 0 auto;
-    justify-content: center;
-    display: flex;
-    flex-wrap: wrap;
     max-width: 500px;
+    text-align: center;
   }
 
   .centered-text {
@@ -51,4 +49,9 @@ module.exports = {
   .take-width {
     width: 100%;
   }
+
+  .form-row {
+    padding: 5px;
+  }
+
 </style>

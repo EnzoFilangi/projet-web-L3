@@ -75,4 +75,8 @@ module.exports = {
     margin-bottom: 10px;
   }
 
+  form {
+    padding: 5px;
+  }
+
 </style>
