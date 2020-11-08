@@ -7,7 +7,7 @@
         <input class="centered-text form-control col" type="password" v-model="password" placeholder="Mot de passe" required>
       </div>
       <button class="btn btn-primary take-width" type="submit">Se connecter</button>
-      <button @click="register" class="btn btn-secondary take-width" style="margin-top: 1%">Pas de compte ? S'inscrire</button>
+      <button type="button" @click="register" class="btn btn-secondary take-width" style="margin-top: 1%">Pas de compte ? S'inscrire</button>
     </form>
   </div>
 </template>
