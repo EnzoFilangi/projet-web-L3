@@ -13,7 +13,7 @@
         <input class="centered-text form-control col" style="margin-left: 10px; margin-right: 5px" type="password" v-model="password_verif" placeholder="Validation du mot de passe" required v-bind:class="{different: password !== password_verif}">
       </div>
       <p v-if="password !== password_verif" class="different-text">Attention les deux mots de passe sont différents</p>
-      <button class="btn take-width" type="submit" v-bind:class="[(password === password_verif && email) ? 'btn-primary' : 'btn-secondary disabled']">Ajouter</button>
+      <button class="btn take-width" type="submit" v-bind:class="[(password === password_verif && email) ? 'btn-primary' : 'btn-secondary disabled']">Créer un compte</button>
     </form>
   </div>
 </template>
