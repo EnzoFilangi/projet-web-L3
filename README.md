@@ -19,7 +19,7 @@ SECRET="fjnjgs15sfzef15zEAzdad"
 DATABASE="projet_web_l3"
 DB_PASSWORD="superMotDePasse"
 ```
-# Execution
+# Exécution
 
-- Ouvrir powershell à la racine du projet et éxecuter `npm start`
+- Ouvrir powershell à la racine du projet et exécuter `npm start`
 - Consulter http://localhost:3000
