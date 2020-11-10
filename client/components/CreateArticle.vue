@@ -153,7 +153,8 @@
   }
 
   .body {
-    max-width: 50%;
+    max-width: 700px;
+    min-width: 300px;
   }
 
   .autocomplete {

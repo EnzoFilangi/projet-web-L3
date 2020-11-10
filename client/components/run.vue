@@ -155,7 +155,13 @@ module.exports = {
   }
 
   .card-style {
-    width: 75%; margin-left: 12.5%; min-height: 75%
+    width: 75%;
+    margin-left: 12.5%;
+    min-height: 75%
+  }
+
+  .card-body {
+    flex: 0 1 auto;
   }
 
   .width-20 {
